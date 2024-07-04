@@ -48,7 +48,7 @@ jobs:
         if: runner.os == 'Linux'
         # We're using musl to make the binaries statically linked and portable
         run: |
-          cargo install cargo-zigbuild
+          cargo install cargo-zigbuild --force
           cargo --verbose zigbuild --bin spectred --bin simpa --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-gnu.2.27 # Use an older glibc version
           mkdir bin || true
           cp target/x86_64-unknown-linux-gnu/release/spectred bin/
