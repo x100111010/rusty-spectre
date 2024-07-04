@@ -307,10 +307,18 @@ impl ConsensusFactory for Factory {
         };
 
         let dir = self.db_root_dir.join(entry.directory_name.clone());
-        let db = self.build_db_connection(dir.clone()).unwrap_or_else(|e| {
-            panic!("Failed to build database connection at {:?}: {}", dir, e);
-        });
-
+        let db = {
+            let builder = spectre_database::prelude::ConnBuilder::default()
+                .with_db_path(dir)
+                .with_parallelism(self.db_parallelism)
+                .with_files_limit(self.fd_budget / 2); // active and staging consensuses should have equal budgets
+            if let Some(size) = self.config.rocksdb_cache_size {
+                builder.with_cache_size(size).build()
+            } else {
+                builder.build()
+            }
+        }
+        .unwrap();
         let session_lock = SessionLock::new();
         let consensus = Arc::new(Consensus::new(
             db.clone(),
@@ -338,10 +346,18 @@ impl ConsensusFactory for Factory {
 
         let entry = self.management_store.write().new_staging_consensus_entry().unwrap();
         let dir = self.db_root_dir.join(entry.directory_name);
-        let db = self.build_db_connection(dir.clone()).unwrap_or_else(|e| {
-            panic!("Failed to build database connection at {:?}: {}", dir, e);
-        });
-
+        let db = {
+            let builder = spectre_database::prelude::ConnBuilder::default()
+                .with_db_path(dir)
+                .with_parallelism(self.db_parallelism)
+                .with_files_limit(self.fd_budget / 2); // active and staging consensuses should have equal budgets
+            if let Some(size) = self.config.rocksdb_cache_size {
+                builder.with_cache_size(size).build()
+            } else {
+                builder.build()
+            }
+        }
+        .unwrap();
         let session_lock = SessionLock::new();
         let consensus = Arc::new(Consensus::new(
             db.clone(),
