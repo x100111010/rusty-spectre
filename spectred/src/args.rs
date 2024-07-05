@@ -377,8 +377,7 @@ a large RAM (~64GB) can set this value to ~3.0-4.0 and gain superior performance
                 .long("rocksdb-consensus-cache-size")
                 .require_equals(true)
                 .value_parser(clap::value_parser!(usize))
-                .help("Set the cache size for RocksDB consensus in bytes (default: 1GB).
-Example: --rocksdb-consensus-cache-size=1073741824 (for 1GB)"),
+                .help("Set the cache size for RocksDB consensus in bytes. Example: --rocksdb-consensus-cache-size=1073741824 (for 1GB)"),
         );
 
     #[cfg(feature = "devnet-prealloc")]
