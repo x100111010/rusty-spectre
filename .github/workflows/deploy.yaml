@@ -99,7 +99,7 @@ jobs:
           echo "asset_name=${asset_name}" >> $GITHUB_ENV
 
       - name: Upload release asset
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -187,7 +187,7 @@ jobs:
           echo "asset_name=${asset_name}" >> $GITHUB_ENV
 
       - name: Upload WASM32 SDK
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
