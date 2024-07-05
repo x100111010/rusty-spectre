@@ -137,7 +137,7 @@ impl Default for Args {
             #[cfg(feature = "devnet-prealloc")]
             prealloc_amount: 1_000_000,
 
-            disable_upnp: false,
+            disable_upnp: true,
             disable_dns_seeding: false,
             disable_grpc: false,
             ram_scale: 1.0,
@@ -372,8 +372,14 @@ Setting to 0 prevents the preallocation and sets the maximum to {}, leading to 0
                 .help("Apply a scale factor to memory allocation bounds. Nodes with limited RAM (~4-8GB) should set this to ~0.3-0.5 respectively. Nodes with
 a large RAM (~64GB) can set this value to ~3.0-4.0 and gain superior performance especially for syncing peers faster"),
         )
-        .arg(Arg::new("rocksdb-consensus-cache-size").long("rocksdb-consensus-cache-size").require_equals(true).value_parser(clap::value_parser!(usize)))
-        ;
+        .arg(
+            Arg::new("rocksdb-consensus-cache-size")
+                .long("rocksdb-consensus-cache-size")
+                .require_equals(true)
+                .value_parser(clap::value_parser!(usize))
+                .help("Set the cache size for RocksDB consensus in bytes (default: 1GB).
+Example: --rocksdb-consensus-cache-size=1073741824 (for 1GB)"),
+        );
 
     #[cfg(feature = "devnet-prealloc")]
     let cmd = cmd
@@ -563,6 +569,4 @@ fn arg_match_many_unwrap_or<T: Clone + Send + Sync + 'static>(m: &clap::ArgMatch
       --override-dag-params-file=FILE       Override DAG parameters (allowed only on devnet).
   -s, --service=COMMAND                     Service command {install, remove, start, stop}.
       --nogrpc                              Do not initialize the gRPC server.
-      --rocksdb-consensus-cache-size=SIZE   Set the cache size for RocksDB consensus in bytes (default: 1073741824 for 1GB).
-                                            Example: --rocksdb-consensus-cache-size=1073741824 (for 1GB)
 */
