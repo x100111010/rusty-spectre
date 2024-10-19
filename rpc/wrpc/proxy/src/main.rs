@@ -30,12 +30,12 @@ struct Args {
     #[clap(long)]
     devnet: bool,
 
-    /// proxy:port for gRPC server (grpc://127.0.0.1:18110)
+    /// proxy:port for gRPC server (grpc://127.0.0.1:16110)
     #[clap(name = "grpc")]
     grpc_proxy_address: Option<String>,
 
     // /// wRPC port
-    /// interface:port for wRPC server (wrpc://127.0.0.1:19110)
+    /// interface:port for wRPC server (wrpc://127.0.0.1:17110)
     #[clap(long)]
     interface: Option<String>,
     /// Number of notification serializer threads
@@ -90,13 +90,15 @@ async fn main() -> Result<()> {
         rpc_handler.clone(),
         router.interface.clone(),
         Some(counters),
+        false,
     );
 
     log_info!("Spectre wRPC server is listening on {}", options.listen_address);
     log_info!("Using `{encoding}` protocol encoding");
 
     let config = WebSocketConfig { max_message_size: Some(1024 * 1024 * 1024), ..Default::default() };
-    server.listen(&options.listen_address, Some(config)).await?;
+    let listener = server.bind(&options.listen_address).await?;
+    server.listen(listener, Some(config)).await?;
 
     Ok(())
 }
