@@ -243,6 +243,28 @@ from!(item: &spectre_rpc_core::AddPeerRequest, protowire::AddPeerRequestMessage,
 });
 from!(RpcResult<&spectre_rpc_core::AddPeerResponse>, protowire::AddPeerResponseMessage);
 
+from!(&spectre_rpc_core::GetPruningWindowRootsRequest, protowire::GetPruningWindowRootsRequestMessage);
+from!(item: &spectre_rpc_core::PruningWindowRoots, protowire::PruningWindowRoots, {
+    Self {
+        pp_roots: item.pp_roots.iter().map(|x| x.to_string()).collect(),
+        pp_index: item.pp_index,
+    }
+});
+from!(item: RpcResult<&spectre_rpc_core::GetPruningWindowRootsResponse>, protowire::GetPruningWindowRootsResponseMessage, {
+    Self { roots: item.roots.iter().map(|x| x.into()).collect(), error: None }
+});
+
+from!(item: &spectre_rpc_core::ArchivalBlock, protowire::ArchivalBlock, {
+    Self {
+        block: Some((&item.block).into()),
+        child: item.child.unwrap_or_default().to_string(),
+    }
+});
+from!(item: &spectre_rpc_core::AddArchivalBlocksRequest, protowire::AddArchivalBlocksRequestMessage, {
+    Self { blocks: item.blocks.iter().map(|x| x.into()).collect() }
+});
+from!(RpcResult<&spectre_rpc_core::AddArchivalBlocksResponse>, protowire::AddArchivalBlocksResponseMessage);
+
 from!(item: &spectre_rpc_core::SubmitTransactionRequest, protowire::SubmitTransactionRequestMessage, {
     Self { transaction: Some((&item.transaction).into()), allow_orphan: item.allow_orphan }
 });
@@ -714,6 +736,43 @@ try_from!(item: &protowire::AddPeerRequestMessage, spectre_rpc_core::AddPeerRequ
     Self { peer_address: RpcContextualPeerAddress::from_str(&item.address)?, is_permanent: item.is_permanent }
 });
 try_from!(&protowire::AddPeerResponseMessage, RpcResult<spectre_rpc_core::AddPeerResponse>);
+
+try_from!(&protowire::GetPruningWindowRootsRequestMessage, spectre_rpc_core::GetPruningWindowRootsRequest);
+try_from!(item: &protowire::PruningWindowRoots, spectre_rpc_core::PruningWindowRoots, {
+    Self { pp_roots: item.pp_roots.iter().map(|x| Ok::<_, RpcError>(RpcHash::from_str(x)?)).collect::<Result<Vec<_>, _>>()?, pp_index: item.pp_index }
+});
+try_from!(item: &protowire::GetPruningWindowRootsResponseMessage, RpcResult<spectre_rpc_core::GetPruningWindowRootsResponse>, {
+    Self {
+        roots: item
+            .roots
+            .iter()
+            .map(spectre_rpc_core::PruningWindowRoots::try_from)
+            .collect::<Result<Vec<_>, _>>().map_err(|e| RpcError::General(e.to_string()))? // TODO: More specific error?
+    }
+});
+
+try_from!(item: &protowire::ArchivalBlock, spectre_rpc_core::ArchivalBlock, {
+    Self {
+        block: item
+            .block
+            .as_ref()
+            .ok_or_else(|| RpcError::MissingRpcFieldError("ArchivalBlock".to_string(), "block".to_string()))?
+            .try_into()?,
+        child: if item.child.is_empty(){ None }else {Some(RpcHash::from_str(&item.child)?)},
+    }
+});
+try_from!(item: &protowire::AddArchivalBlocksRequestMessage, spectre_rpc_core::AddArchivalBlocksRequest,{
+    Self {
+        blocks: item
+            .blocks
+            .iter()
+            .map(spectre_rpc_core::ArchivalBlock::try_from)
+            .collect::<Result<Vec<_>, _>>().map_err(|e| RpcError::General(e.to_string()))? // TODO: More specific error?
+    }
+});
+try_from!(item: &protowire::AddArchivalBlocksResponseMessage, RpcResult<spectre_rpc_core::AddArchivalBlocksResponse>, {
+    Self {}
+});
 
 try_from!(item: &protowire::SubmitTransactionRequestMessage, spectre_rpc_core::SubmitTransactionRequest, {
     Self {

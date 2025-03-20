@@ -67,6 +67,8 @@ async fn sanity_test() {
     for op in SpectredPayloadOps::iter() {
         let network_id = daemon.network;
         let task: JoinHandle<()> = match op {
+            SpectredPayloadOps::GetPruningWindowRoots => todo!(),
+            SpectredPayloadOps::AddArchivalBlocks => todo!(),
             SpectredPayloadOps::SubmitBlock => {
                 let rpc_client = client.clone();
                 tst!(op, {
