@@ -1,7 +1,7 @@
 //! Conversion of Notification Scope related types
 
 use crate::{
-    NotifyBlockAddedRequest, NotifyFinalityConflictRequest, NotifyMempoolChangedRequest, NotifyNewBlockTemplateRequest,
+    NotifyBlockAddedRequest, NotifyFinalityConflictRequest, NotifyMempoolSizeChangedRequest, NotifyNewBlockTemplateRequest,
     NotifyPruningPointUtxoSetOverrideRequest, NotifySinkBlueScoreChangedRequest, NotifyUtxosChangedRequest,
     NotifyVirtualChainChangedRequest, NotifyVirtualDaaScoreChangedRequest,
 };
@@ -62,4 +62,4 @@ from!(SinkBlueScoreChanged);
 from!(VirtualDaaScoreChanged);
 from!(PruningPointUtxoSetOverride);
 from!(NewBlockTemplate);
-from!(MempoolChanged);
+from!(MempoolSizeChanged);

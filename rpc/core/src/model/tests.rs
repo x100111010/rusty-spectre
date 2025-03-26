@@ -1290,29 +1290,29 @@ mod mockery {
         }
     }
 
-    impl Mock for NotifyMempoolChangedRequest {
+    impl Mock for NotifyMempoolSizeChangedRequest {
         fn mock() -> Self {
-            NotifyMempoolChangedRequest { command: Command::Start }
+            NotifyMempoolSizeChangedRequest { command: Command::Start }
         }
     }
 
-    test!(NotifyMempoolChangedRequest);
+    test!(NotifyMempoolSizeChangedRequest);
 
-    impl Mock for NotifyMempoolChangedResponse {
+    impl Mock for NotifyMempoolSizeChangedResponse {
         fn mock() -> Self {
-            NotifyMempoolChangedResponse {}
+            NotifyMempoolSizeChangedResponse {}
         }
     }
 
-    test!(NotifyMempoolChangedResponse);
+    test!(NotifyMempoolSizeChangedResponse);
 
-    impl Mock for MempoolChangedNotification {
+    impl Mock for MempoolSizeChangedNotification {
         fn mock() -> Self {
-            MempoolChangedNotification { network_mempool_size: mock() }
+            MempoolSizeChangedNotification { network_mempool_size: mock() }
         }
     }
 
-    test!(MempoolChangedNotification);
+    test!(MempoolSizeChangedNotification);
 
     test!(SubscribeResponse);
 

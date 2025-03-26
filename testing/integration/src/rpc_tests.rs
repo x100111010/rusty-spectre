@@ -11,8 +11,8 @@ use spectre_hashes::Hash;
 use spectre_notify::{
     connection::{ChannelConnection, ChannelType},
     scope::{
-        BlockAddedScope, FinalityConflictScope, MempoolChangedScope, NewBlockTemplateScope, PruningPointUtxoSetOverrideScope, Scope,
-        SinkBlueScoreChangedScope, UtxosChangedScope, VirtualChainChangedScope, VirtualDaaScoreChangedScope,
+        BlockAddedScope, FinalityConflictScope, MempoolSizeChangedScope, NewBlockTemplateScope, PruningPointUtxoSetOverrideScope,
+        Scope, SinkBlueScoreChangedScope, UtxosChangedScope, VirtualChainChangedScope, VirtualDaaScoreChangedScope,
     },
 };
 use spectre_rpc_core::{api::rpc::RpcApi, model::*, Notification};
@@ -734,11 +734,11 @@ async fn sanity_test() {
                         .unwrap();
                 })
             }
-            SpectredPayloadOps::NotifyMempoolChanged => {
+            SpectredPayloadOps::NotifyMempoolSizeChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
-                    rpc_client.start_notify(id, MempoolChangedScope {}.into()).await.unwrap();
+                    rpc_client.start_notify(id, MempoolSizeChangedScope {}.into()).await.unwrap();
                 })
             }
             SpectredPayloadOps::StopNotifyingUtxosChanged => {

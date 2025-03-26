@@ -2,7 +2,7 @@ use spectre_notify::{scope::Scope, subscription::Command};
 
 use crate::protowire::{
     spectred_request, spectred_response, NotifyBlockAddedRequestMessage, NotifyFinalityConflictRequestMessage,
-    NotifyMempoolChangedRequestMessage, NotifyNewBlockTemplateRequestMessage, NotifyPruningPointUtxoSetOverrideRequestMessage,
+    NotifyMempoolSizeChangedRequestMessage, NotifyNewBlockTemplateRequestMessage, NotifyPruningPointUtxoSetOverrideRequestMessage,
     NotifySinkBlueScoreChangedRequestMessage, NotifyUtxosChangedRequestMessage, NotifyVirtualChainChangedRequestMessage,
     NotifyVirtualDaaScoreChangedRequestMessage, SpectredRequest, SpectredResponse,
 };
@@ -64,8 +64,10 @@ impl spectred_request::Payload {
                     command: command.into(),
                 })
             }
-            Scope::MempoolChanged(_) => {
-                spectred_request::Payload::NotifyMempoolChangedRequest(NotifyMempoolChangedRequestMessage { command: command.into() })
+            Scope::MempoolSizeChanged(_) => {
+                spectred_request::Payload::NotifyMempoolSizeChangedRequest(NotifyMempoolSizeChangedRequestMessage {
+                    command: command.into(),
+                })
             }
         }
     }
@@ -82,7 +84,7 @@ impl spectred_request::Payload {
                 | Payload::NotifyVirtualDaaScoreChangedRequest(_)
                 | Payload::NotifyPruningPointUtxoSetOverrideRequest(_)
                 | Payload::NotifyNewBlockTemplateRequest(_)
-                | Payload::NotifyMempoolChangedRequest(_)
+                | Payload::NotifyMempoolSizeChangedRequest(_)
                 | Payload::StopNotifyingUtxosChangedRequest(_)
                 | Payload::StopNotifyingPruningPointUtxoSetOverrideRequest(_)
         )
@@ -112,7 +114,7 @@ impl spectred_response::Payload {
             Payload::VirtualDaaScoreChangedNotification(_) => true,
             Payload::PruningPointUtxoSetOverrideNotification(_) => true,
             Payload::NewBlockTemplateNotification(_) => true,
-            Payload::MempoolChangedNotification(_) => true,
+            Payload::MempoolSizeChangedNotification(_) => true,
             _ => false,
         }
     }

@@ -2,7 +2,7 @@
 
 use crate::{
     convert::utxo::utxo_set_into_rpc, BlockAddedNotification, FinalityConflictNotification, FinalityConflictResolvedNotification,
-    MempoolChangedNotification, NewBlockTemplateNotification, Notification, PruningPointUtxoSetOverrideNotification,
+    MempoolSizeChangedNotification, NewBlockTemplateNotification, Notification, PruningPointUtxoSetOverrideNotification,
     RpcAcceptedTransactionIds, SinkBlueScoreChangedNotification, UtxosChangedNotification, VirtualChainChangedNotification,
     VirtualDaaScoreChangedNotification,
 };
@@ -32,7 +32,7 @@ impl From<&consensus_notify::Notification> for Notification {
             consensus_notify::Notification::VirtualDaaScoreChanged(msg) => Notification::VirtualDaaScoreChanged(msg.into()),
             consensus_notify::Notification::PruningPointUtxoSetOverride(msg) => Notification::PruningPointUtxoSetOverride(msg.into()),
             consensus_notify::Notification::NewBlockTemplate(msg) => Notification::NewBlockTemplate(msg.into()),
-            consensus_notify::Notification::MempoolChanged(msg) => Notification::MempoolChanged(msg.into()),
+            consensus_notify::Notification::MempoolSizeChanged(msg) => Notification::MempoolSizeChanged(msg.into()),
         }
     }
 }
@@ -114,8 +114,8 @@ impl From<&consensus_notify::NewBlockTemplateNotification> for NewBlockTemplateN
     }
 }
 
-impl From<&consensus_notify::MempoolChangedNotification> for MempoolChangedNotification {
-    fn from(item: &consensus_notify::MempoolChangedNotification) -> Self {
+impl From<&consensus_notify::MempoolSizeChangedNotification> for MempoolSizeChangedNotification {
+    fn from(item: &consensus_notify::MempoolSizeChangedNotification) -> Self {
         Self { network_mempool_size: item.network_mempool_size }
     }
 }

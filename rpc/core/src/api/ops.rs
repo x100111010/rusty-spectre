@@ -40,7 +40,7 @@ pub enum RpcApiOps {
     NotifyVirtualDaaScoreChanged = 16,
     NotifyVirtualChainChanged = 17,
     NotifySinkBlueScoreChanged = 18,
-    NotifyMempoolChanged = 19,
+    NotifyMempoolSizeChanged = 19,
 
     // Notification ops required by wRPC
 
@@ -55,7 +55,7 @@ pub enum RpcApiOps {
     VirtualDaaScoreChangedNotification = 66,
     PruningPointUtxoSetOverrideNotification = 67,
     NewBlockTemplateNotification = 68,
-    MempoolChangedNotification = 69,
+    MempoolSizeChangedNotification = 69,
 
     // RPC methods
     /// Ping the node to check if connection is alive
@@ -155,7 +155,7 @@ impl RpcApiOps {
                 | RpcApiOps::NotifyFinalityConflictResolved
                 | RpcApiOps::NotifySinkBlueScoreChanged
                 | RpcApiOps::NotifyVirtualDaaScoreChanged
-                | RpcApiOps::NotifyMempoolChanged
+                | RpcApiOps::NotifyMempoolSizeChanged
                 | RpcApiOps::Subscribe
                 | RpcApiOps::Unsubscribe
         )
@@ -180,7 +180,7 @@ impl From<EventType> for RpcApiOps {
             EventType::UtxosChanged => RpcApiOps::UtxosChangedNotification,
             EventType::SinkBlueScoreChanged => RpcApiOps::SinkBlueScoreChangedNotification,
             EventType::VirtualDaaScoreChanged => RpcApiOps::VirtualDaaScoreChangedNotification,
-            EventType::MempoolChanged => RpcApiOps::MempoolChangedNotification,
+            EventType::MempoolSizeChanged => RpcApiOps::MempoolSizeChangedNotification,
             EventType::PruningPointUtxoSetOverride => RpcApiOps::PruningPointUtxoSetOverrideNotification,
             EventType::NewBlockTemplate => RpcApiOps::NewBlockTemplateNotification,
         }

@@ -559,10 +559,10 @@ from!(item: &spectre_rpc_core::NotifySinkBlueScoreChangedRequest, protowire::Not
     Self { command: item.command.into() }
 });
 from!(RpcResult<&spectre_rpc_core::NotifySinkBlueScoreChangedResponse>, protowire::NotifySinkBlueScoreChangedResponseMessage);
-from!(item: &spectre_rpc_core::NotifyMempoolChangedRequest, protowire::NotifyMempoolChangedRequestMessage, {
+from!(item: &spectre_rpc_core::NotifyMempoolSizeChangedRequest, protowire::NotifyMempoolSizeChangedRequestMessage, {
     Self { command: item.command.into() }
 });
-from!(RpcResult<&spectre_rpc_core::NotifyMempoolChangedResponse>, protowire::NotifyMempoolChangedResponseMessage);
+from!(RpcResult<&spectre_rpc_core::NotifyMempoolSizeChangedResponse>, protowire::NotifyMempoolSizeChangedResponseMessage);
 
 // ----------------------------------------------------------------------------
 // protowire to rpc_core
@@ -1064,10 +1064,10 @@ try_from!(item: &protowire::NotifySinkBlueScoreChangedRequestMessage, spectre_rp
     Self { command: item.command.into() }
 });
 try_from!(&protowire::NotifySinkBlueScoreChangedResponseMessage, RpcResult<spectre_rpc_core::NotifySinkBlueScoreChangedResponse>);
-try_from!(item: &protowire::NotifyMempoolChangedRequestMessage, spectre_rpc_core::NotifyMempoolChangedRequest, {
+try_from!(item: &protowire::NotifyMempoolSizeChangedRequestMessage, spectre_rpc_core::NotifyMempoolSizeChangedRequest, {
     Self { command: item.command.into() }
 });
-try_from!(&protowire::NotifyMempoolChangedResponseMessage, RpcResult<spectre_rpc_core::NotifyMempoolChangedResponse>);
+try_from!(&protowire::NotifyMempoolSizeChangedResponseMessage, RpcResult<spectre_rpc_core::NotifyMempoolSizeChangedResponse>);
 
 // ----------------------------------------------------------------------------
 // Unit tests

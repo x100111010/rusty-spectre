@@ -15,7 +15,7 @@ use spectre_consensus_core::config::Config;
 use spectre_consensus_core::errors::block::RuleError;
 use spectre_consensus_core::tx::{Transaction, TransactionId};
 use spectre_consensus_notify::{
-    notification::{MempoolChangedNotification, Notification, PruningPointUtxoSetOverrideNotification},
+    notification::{MempoolSizeChangedNotification, Notification, PruningPointUtxoSetOverrideNotification},
     root::ConsensusNotificationRoot,
 };
 use spectre_consensusmanager::{BlockProcessingBatch, ConsensusInstance, ConsensusManager, ConsensusProxy};
@@ -611,7 +611,8 @@ impl FlowContext {
     pub async fn on_transaction_added_to_mempool(&self) {
         let network_mempool_size = self.mining_manager().clone().transaction_count(TransactionQuery::TransactionsOnly).await as u64;
 
-        let _ = self.notification_root.notify(Notification::MempoolChanged(MempoolChangedNotification::new(network_mempool_size)));
+        let _ =
+            self.notification_root.notify(Notification::MempoolSizeChanged(MempoolSizeChangedNotification::new(network_mempool_size)));
     }
 
     /// Adds the rpc-submitted transaction to the mempool and propagates it to peers.

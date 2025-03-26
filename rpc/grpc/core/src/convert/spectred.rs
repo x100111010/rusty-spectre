@@ -73,7 +73,7 @@ pub mod spectred_request_convert {
     impl_into_spectred_request!(NotifyVirtualDaaScoreChanged);
     impl_into_spectred_request!(NotifyVirtualChainChanged);
     impl_into_spectred_request!(NotifySinkBlueScoreChanged);
-    impl_into_spectred_request!(NotifyMempoolChanged);
+    impl_into_spectred_request!(NotifyMempoolSizeChanged);
 
     macro_rules! impl_into_spectred_request {
         ($name:tt) => {
@@ -215,7 +215,7 @@ pub mod spectred_response_convert {
 
     impl_into_spectred_notify_response!(NotifyUtxosChanged, StopNotifyingUtxosChanged);
     impl_into_spectred_notify_response!(NotifyPruningPointUtxoSetOverride, StopNotifyingPruningPointUtxoSetOverride);
-    impl_into_spectred_notify_response!(NotifyMempoolChanged);
+    impl_into_spectred_notify_response!(NotifyMempoolSizeChanged);
 
     macro_rules! impl_into_spectred_response {
         ($name:tt) => {

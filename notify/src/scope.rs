@@ -45,7 +45,7 @@ pub enum Scope {
     VirtualDaaScoreChanged,
     PruningPointUtxoSetOverride,
     NewBlockTemplate,
-    MempoolChanged,
+    MempoolSizeChanged,
 }
 }
 
@@ -269,16 +269,16 @@ impl Deserializer for NewBlockTemplateScope {
 }
 
 #[derive(Clone, Display, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
-pub struct MempoolChangedScope {}
+pub struct MempoolSizeChangedScope {}
 
-impl Serializer for MempoolChangedScope {
+impl Serializer for MempoolSizeChangedScope {
     fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         store!(u16, &1, writer)?;
         Ok(())
     }
 }
 
-impl Deserializer for MempoolChangedScope {
+impl Deserializer for MempoolSizeChangedScope {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         let _version = load!(u16, reader)?;
         Ok(Self {})

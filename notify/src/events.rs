@@ -51,7 +51,7 @@ event_type_enum! {
         VirtualDaaScoreChanged,
         PruningPointUtxoSetOverride,
         NewBlockTemplate,
-        MempoolChanged,
+        MempoolSizeChanged,
     }
 }
 
@@ -71,7 +71,7 @@ impl FromStr for EventType {
             "virtual-daa-score-changed" => Ok(EventType::VirtualDaaScoreChanged),
             "pruning-point-utxo-set-override" => Ok(EventType::PruningPointUtxoSetOverride),
             "new-block-template" => Ok(EventType::NewBlockTemplate),
-            "mempool-changed" => Ok(EventType::MempoolChanged),
+            "mempool-size-changed" => Ok(EventType::MempoolSizeChanged),
             _ => Err(Error::InvalidEventType(s.to_string())),
         }
     }
