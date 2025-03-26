@@ -11,7 +11,7 @@ use spectre_hashes::Hash;
 use spectre_notify::{
     connection::{ChannelConnection, ChannelType},
     scope::{
-        BlockAddedScope, FinalityConflictScope, NewBlockTemplateScope, PruningPointUtxoSetOverrideScope, Scope,
+        BlockAddedScope, FinalityConflictScope, MempoolChangedScope, NewBlockTemplateScope, PruningPointUtxoSetOverrideScope, Scope,
         SinkBlueScoreChangedScope, UtxosChangedScope, VirtualChainChangedScope, VirtualDaaScoreChangedScope,
     },
 };
@@ -732,6 +732,13 @@ async fn sanity_test() {
                         .start_notify(id, VirtualChainChangedScope { include_accepted_transaction_ids: false }.into())
                         .await
                         .unwrap();
+                })
+            }
+            SpectredPayloadOps::NotifyMempoolChanged => {
+                let rpc_client = client.clone();
+                let id = listener_id;
+                tst!(op, {
+                    rpc_client.start_notify(id, MempoolChangedScope {}.into()).await.unwrap();
                 })
             }
             SpectredPayloadOps::StopNotifyingUtxosChanged => {

@@ -2,12 +2,13 @@ use crate::protowire::{
     spectred_response::Payload, BlockAddedNotificationMessage, NewBlockTemplateNotificationMessage, RpcNotifyCommand, SpectredResponse,
 };
 use crate::protowire::{
-    FinalityConflictNotificationMessage, FinalityConflictResolvedNotificationMessage, NotifyPruningPointUtxoSetOverrideRequestMessage,
-    NotifyPruningPointUtxoSetOverrideResponseMessage, NotifyUtxosChangedRequestMessage, NotifyUtxosChangedResponseMessage,
-    PruningPointUtxoSetOverrideNotificationMessage, SinkBlueScoreChangedNotificationMessage,
-    StopNotifyingPruningPointUtxoSetOverrideRequestMessage, StopNotifyingPruningPointUtxoSetOverrideResponseMessage,
-    StopNotifyingUtxosChangedRequestMessage, StopNotifyingUtxosChangedResponseMessage, UtxosChangedNotificationMessage,
-    VirtualChainChangedNotificationMessage, VirtualDaaScoreChangedNotificationMessage,
+    FinalityConflictNotificationMessage, FinalityConflictResolvedNotificationMessage, MempoolChangedNotificationMessage,
+    NotifyPruningPointUtxoSetOverrideRequestMessage, NotifyPruningPointUtxoSetOverrideResponseMessage,
+    NotifyUtxosChangedRequestMessage, NotifyUtxosChangedResponseMessage, PruningPointUtxoSetOverrideNotificationMessage,
+    SinkBlueScoreChangedNotificationMessage, StopNotifyingPruningPointUtxoSetOverrideRequestMessage,
+    StopNotifyingPruningPointUtxoSetOverrideResponseMessage, StopNotifyingUtxosChangedRequestMessage,
+    StopNotifyingUtxosChangedResponseMessage, UtxosChangedNotificationMessage, VirtualChainChangedNotificationMessage,
+    VirtualDaaScoreChangedNotificationMessage,
 };
 use crate::{from, try_from};
 use spectre_notify::subscription::Command;
@@ -31,6 +32,9 @@ from!(item: &spectre_rpc_core::Notification, Payload, {
         Notification::UtxosChanged(ref notification) => Payload::UtxosChangedNotification(notification.into()),
         Notification::SinkBlueScoreChanged(ref notification) => Payload::SinkBlueScoreChangedNotification(notification.into()),
         Notification::VirtualDaaScoreChanged(ref notification) => Payload::VirtualDaaScoreChangedNotification(notification.into()),
+        Notification::MempoolChanged(ref notification) => {
+            Payload::MempoolChangedNotification(notification.into())
+        }
         Notification::PruningPointUtxoSetOverride(ref notification) => {
             Payload::PruningPointUtxoSetOverrideNotification(notification.into())
         }
@@ -70,6 +74,10 @@ from!(item: &spectre_rpc_core::SinkBlueScoreChangedNotification, SinkBlueScoreCh
 
 from!(item: &spectre_rpc_core::VirtualDaaScoreChangedNotification, VirtualDaaScoreChangedNotificationMessage, {
     Self { virtual_daa_score: item.virtual_daa_score }
+});
+
+from!(item: &spectre_rpc_core::MempoolChangedNotification, MempoolChangedNotificationMessage, {
+    Self { network_mempool_size: item.network_mempool_size }
 });
 
 from!(&spectre_rpc_core::PruningPointUtxoSetOverrideNotification, PruningPointUtxoSetOverrideNotificationMessage);
@@ -117,6 +125,9 @@ try_from!(item: &Payload, spectre_rpc_core::Notification, {
         Payload::PruningPointUtxoSetOverrideNotification(ref notification) => {
             Notification::PruningPointUtxoSetOverride(notification.try_into()?)
         }
+        Payload::MempoolChangedNotification(ref notification) => {
+            Notification::MempoolChanged(notification.try_into()?)
+        },
         _ => Err(RpcError::UnsupportedFeature)?,
     }
 });
@@ -167,6 +178,10 @@ try_from!(item: &SinkBlueScoreChangedNotificationMessage, spectre_rpc_core::Sink
 
 try_from!(item: &VirtualDaaScoreChangedNotificationMessage, spectre_rpc_core::VirtualDaaScoreChangedNotification, {
     Self { virtual_daa_score: item.virtual_daa_score }
+});
+
+try_from!(item: &MempoolChangedNotificationMessage, spectre_rpc_core::MempoolChangedNotification, {
+    Self { network_mempool_size: item.network_mempool_size }
 });
 
 try_from!(&PruningPointUtxoSetOverrideNotificationMessage, spectre_rpc_core::PruningPointUtxoSetOverrideNotification);

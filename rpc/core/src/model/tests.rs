@@ -1290,6 +1290,30 @@ mod mockery {
         }
     }
 
+    impl Mock for NotifyMempoolChangedRequest {
+        fn mock() -> Self {
+            NotifyMempoolChangedRequest { command: Command::Start }
+        }
+    }
+
+    test!(NotifyMempoolChangedRequest);
+
+    impl Mock for NotifyMempoolChangedResponse {
+        fn mock() -> Self {
+            NotifyMempoolChangedResponse {}
+        }
+    }
+
+    test!(NotifyMempoolChangedResponse);
+
+    impl Mock for MempoolChangedNotification {
+        fn mock() -> Self {
+            MempoolChangedNotification { network_mempool_size: mock() }
+        }
+    }
+
+    test!(MempoolChangedNotification);
+
     test!(SubscribeResponse);
 
     impl Mock for UnsubscribeResponse {

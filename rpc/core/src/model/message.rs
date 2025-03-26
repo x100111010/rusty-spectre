@@ -3321,6 +3321,81 @@ impl Deserializer for VirtualDaaScoreChangedNotification {
     }
 }
 
+// NotifyMempoolChangedRequest registers this connection for
+// mempoolChanged notifications.
+//
+// See: MempoolChangedNotification
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyMempoolChangedRequest {
+    pub command: Command,
+}
+
+impl NotifyMempoolChangedRequest {
+    pub fn new(command: Command) -> Self {
+        Self { command }
+    }
+}
+
+impl Serializer for NotifyMempoolChangedRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(Command, &self.command, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for NotifyMempoolChangedRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let command = load!(Command, reader)?;
+        Ok(Self { command })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyMempoolChangedResponse {}
+
+impl Serializer for NotifyMempoolChangedResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for NotifyMempoolChangedResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        Ok(Self {})
+    }
+}
+
+// MempoolChangedNotification is sent whenever the mempool changes.
+//
+// See NotifyMempoolChangedRequest
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MempoolChangedNotification {
+    pub network_mempool_size: u64,
+}
+
+impl Serializer for MempoolChangedNotification {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(u64, &self.network_mempool_size, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for MempoolChangedNotification {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let network_mempool_size = load!(u64, reader)?;
+        Ok(Self { network_mempool_size })
+    }
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // PruningPointUtxoSetOverrideNotification
 

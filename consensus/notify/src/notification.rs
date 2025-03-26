@@ -42,6 +42,9 @@ pub enum Notification {
 
     #[display(fmt = "NewBlockTemplate notification")]
     NewBlockTemplate(NewBlockTemplateNotification),
+
+    #[display(fmt = "MempoolChanged notification: size {}", "_0.network_mempool_size")]
+    MempoolChanged(MempoolChangedNotification),
 }
 }
 
@@ -181,3 +184,14 @@ pub struct PruningPointUtxoSetOverrideNotification {}
 
 #[derive(Debug, Clone)]
 pub struct NewBlockTemplateNotification {}
+
+#[derive(Debug, Clone)]
+pub struct MempoolChangedNotification {
+    pub network_mempool_size: u64,
+}
+
+impl MempoolChangedNotification {
+    pub fn new(network_mempool_size: u64) -> Self {
+        Self { network_mempool_size }
+    }
+}

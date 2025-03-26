@@ -636,6 +636,25 @@ message VirtualDaaScoreChangedNotificationMessage {
   uint64 virtualDaaScore = 1;
 }
 
+// NotifyMempoolChangedRequestMessage registers this connection for
+// mempoolChanged notifications.
+//
+// See: MempoolChangedNotificationMessage
+message NotifyMempoolChangedRequestMessage {
+  RpcNotifyCommand command = 101;
+}
+
+message NotifyMempoolChangedResponseMessage {
+  RPCError error = 1000;
+}
+
+// MempoolChangedNotificationMessage is sent whenever the mempool changes.
+//
+// See NotifyMempoolChangedRequestMessage
+message MempoolChangedNotificationMessage {
+  uint64 networkMempoolSize = 1;
+}
+
 // NotifyPruningPointUtxoSetOverrideRequestMessage registers this connection for
 // pruning point UTXO set override notifications.
 //

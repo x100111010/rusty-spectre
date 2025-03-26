@@ -98,6 +98,7 @@ pub enum SpectredPayloadOps {
     NotifyPruningPointUtxoSetOverride,
     NotifyVirtualDaaScoreChanged,
     NotifyVirtualChainChanged,
+    NotifyMempoolChanged,
 
     // Legacy stop subscription commands
     StopNotifyingUtxosChanged,
