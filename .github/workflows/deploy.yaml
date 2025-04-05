@@ -238,6 +238,9 @@ jobs:
         run: |
           pacman -S --noconfirm mingw-w64-clang-x86_64-headers
 
+          CLANG_DIR=$(find /clang64/lib/clang -type d -name include | head -n 1)
+          echo "clang include dir: $CLANG_DIR"
+
           export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin" # manually override path to select proper msys2 build tools.
           rustup target add x86_64-pc-windows-gnullvm
           cargo build --target x86_64-pc-windows-gnullvm --bin spectred --release
