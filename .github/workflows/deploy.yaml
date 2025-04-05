@@ -226,8 +226,11 @@ jobs:
         # We're using clang to link only the ucrt library statically.
         env:
           RUSTFLAGS: -L/clang64/lib -lstatic=c++
+          CFLAGS: "-I/clang64/include"
         shell: msys2 {0}
         run: |
+          pacman -S --noconfirm mingw-w64-clang-x86_64-headers
+
           export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin" # manually override path to select proper msys2 build tools.
           rustup target add x86_64-pc-windows-gnullvm
           cargo build --target x86_64-pc-windows-gnullvm --bin spectred --release
