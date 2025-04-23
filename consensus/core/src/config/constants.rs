@@ -82,15 +82,14 @@ pub mod consensus {
     pub const LEGACY_FINALITY_DEPTH: u64 = 86_400;
 
     /// **New** finality duration expressed in time units (seconds).
-    pub const NEW_FINALITY_DURATION: u64 = 43_200; // 12 hours
+    pub const NEW_FINALITY_DURATION: u64 = 21_600; // 6 hours
 
     /// **New** pruning duration expressed in time units (seconds).
     /// Pruning Depth = ϕ+2M+4KL+2K+2
-    /// Spectre 8bps: 345,600 + 2(28,800) + 4(102)(204) + 2(102) +2 = 504,590 ~ 17,52h
-    /// Kaspa 10bps: 432,000 + 2(36,000) + 4(124)(248) + 2(124) + 2 = 627,258 ~ 17.43h
-    /// Rounding this up to 30 hours for simplicity and practical application.
-    /// A 30-hour period is closer to the current mainnet pruning period (~51 hours)
-    pub const NEW_PRUNING_DURATION: u64 = 108_000; // 30 hours
+    /// Spectre 6h 8bps: 172800 + 2(28800) + 4(102)(204) + 2(102) + 2 = 313838 ~ 10.9h
+    /// Rounding this up for simplicity and practical application.
+    /// contains π digits (3.14159...)
+    pub const NEW_PRUNING_DURATION: u64 = 63_141; // 17.54 hours
 
     /// Merge depth bound duration (in seconds). For 1 BPS networks this equals the legacy depth
     /// bound in block units. For higher BPS networks this should be scaled up.
