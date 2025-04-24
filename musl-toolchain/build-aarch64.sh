@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 # Config presets.
-PRESET_HASH_FILE="${HOME}/x-tools/amd64_preset_hash"
-CTNG_PRESET="x86_64-multilib-linux-musl"
+PRESET_HASH_FILE="${HOME}/x-tools/aarch64_preset_hash"
+CTNG_PRESET="aarch64-unknown-linux-musl"
 
 # Calculate and show the hash of this script file.
-CURRENT_PRESET_HASH=$(sha256sum ${GITHUB_WORKSPACE}/musl-toolchain/build-amd64.sh | awk '{print $1}')
+CURRENT_PRESET_HASH=$(sha256sum ${GITHUB_WORKSPACE}/musl-toolchain/build-aarch64.sh | awk '{print $1}')
 echo "Current preset hash: ${CURRENT_PRESET_HASH}"
 
 # Traverse to working directory.
@@ -16,7 +16,7 @@ if [ ! -d "${HOME}/x-tools/${CTNG_PRESET}" ] || [ ! -f "${PRESET_HASH_FILE}" ] |
 
   # Install dependencies.
   sudo apt-get update
-  sudo apt-get install -y autoconf automake libtool libtool-bin unzip help2man python3-dev gperf bison flex texinfo gawk libncurses5-dev
+  sudo apt-get install -y autoconf automake libtool libtool-bin unzip help2man python3-dev gperf bison flex texinfo gawk libncurses5-dev libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
 
   # Clone crosstool-ng.
   git clone https://github.com/crosstool-ng/crosstool-ng
@@ -68,18 +68,18 @@ export AR="${HOME}/x-tools/${CTNG_PRESET}/bin/${CTNG_PRESET}-ar"
 
 # Exports for cc crate.
 # https://docs.rs/cc/latest/cc/#external-configuration-via-environment-variables
-export RANLIB_x86_64_unknown_linux_musl="${HOME}/x-tools/${CTNG_PRESET}/bin/${CTNG_PRESET}-ranlib"
-export CC_x86_64_unknown_linux_musl="${CC}"
-export CXX_x86_64_unknown_linux_musl="${CXX}"
-export AR_x86_64_unknown_linux_musl="${AR}"
-export LD_x86_64_unknown_linux_musl="${LD}"
+export RANLIB_aarch64_unknown_linux_musl="${HOME}/x-tools/${CTNG_PRESET}/bin/${CTNG_PRESET}-ranlib"
+export CC_aarch64_unknown_linux_musl="${CC}"
+export CXX_aarch64_unknown_linux_musl="${CXX}"
+export AR_aarch64_unknown_linux_musl="${AR}"
+export LD_aarch64_unknown_linux_musl="${LD}"
 
 # Set environment variables for static linking.
 export OPENSSL_STATIC="true"
 export RUSTFLAGS="-C link-arg=-static"
 
 # We specify the compiler that will invoke linker.
-export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="${CC}"
+export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER="${CC}"
 
 # Patch missing include in librocksdb-sys-0.16.0+8.10.0. Credit: @supertypo
 FILE_PATH=$(find "${HOME}/.cargo/registry/src/" -path "*/librocksdb-sys-0.16.0+8.10.0/*/offpeak_time_info.h")

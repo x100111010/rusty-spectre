@@ -55,18 +55,12 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install zig on Linux
-        if: matrix.TARGET == 'linux-musl/aarch64'
-        uses: goto-bus-stop/setup-zig@v2 # needed for cargo-zigbuild
-        with:
-          version: 0.13.0
-
       - name: Cache Toolchain
         uses: actions/cache@v4
         with:
           path: |
             ~/x-tools
-          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/build-amd64.sh') }}
+          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/build-amd64.sh', '**/musl-toolchain/build-aarch64.sh') }}
           restore-keys: |
             ${{ runner.os }}-musl-
 
@@ -185,14 +179,17 @@ jobs:
 
       - name: Build on Linux for linux-musl/amd64
         if: matrix.TARGET == 'linux-musl/amd64'
+
         # We're using musl to make the binaries statically linked and portable
         run: |
           rustup target add x86_64-unknown-linux-musl
           cargo fetch --target x86_64-unknown-linux-musl
-          # Run build script for musl toolchain
+
+          # Run build script for musl toolchain.
           source musl-toolchain/build-amd64.sh
-          cd $GITHUB_WORKSPACE
-          # Build for musl
+          cd "${GITHUB_WORKSPACE}"
+
+          # Build for musl.
           cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-musl
           mkdir bin || true
           cp target/x86_64-unknown-linux-musl/release/spectred bin/
@@ -204,12 +201,16 @@ jobs:
       - name: Build on Linux for linux-musl/aarch64
         if: matrix.TARGET == 'linux-musl/aarch64'
         # We're using musl to make the binaries statically linked and portable.
-        env:
-          RUSTFLAGS: -C target-feature=-crt-static
         run: |
           rustup target add aarch64-unknown-linux-musl
-          cargo install cargo-zigbuild
-          cargo --verbose zigbuild --bin spectred --bin rothschild --bin spectre-wallet --release --target aarch64-unknown-linux-musl
+          cargo fetch --target aarch64-unknown-linux-musl
+
+          # Run build script for musl toolchain.
+          source musl-toolchain/build-aarch64.sh
+          cd "${GITHUB_WORKSPACE}"
+
+          # Build for musl.
+          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target aarch64-unknown-linux-musl
           mkdir bin || true
           cp target/aarch64-unknown-linux-musl/release/spectred bin/
           cp target/aarch64-unknown-linux-musl/release/rothschild bin/

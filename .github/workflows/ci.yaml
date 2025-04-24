@@ -349,13 +349,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-        
+
       - name: Cache Toolchain
         uses: actions/cache@v4
         with:
           path: |
             ~/x-tools
-          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/build-amd64.sh') }}
+          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/build-amd64.sh', '**/musl-toolchain/build-aarch64.sh') }}
           restore-keys: |
             ${{ runner.os }}-musl-
 
@@ -364,7 +364,9 @@ jobs:
         run: |
           rustup target add x86_64-unknown-linux-musl
           cargo fetch --target x86_64-unknown-linux-musl
+
           # Run build script for musl toolchain
           source musl-toolchain/build-amd64.sh
+
           # Build for musl
           cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-musl
