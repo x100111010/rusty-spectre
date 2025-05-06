@@ -103,6 +103,9 @@ pub enum SpectredPayloadOps {
     StopNotifyingUtxosChanged,
     StopNotifyingPruningPointUtxoSetOverride,
 
+    GetPruningWindowRoots,
+    AddArchivalBlocks,
+
     // Please note:
     // Notification payloads existing in ResponsePayload are not considered valid ops.
     // The conversion from a notification ResponsePayload into SpectredPayloadOps fails.

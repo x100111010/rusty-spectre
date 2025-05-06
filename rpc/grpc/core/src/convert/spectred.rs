@@ -64,6 +64,8 @@ pub mod spectred_request_convert {
     impl_into_spectred_request!(GetFeeEstimateExperimental);
     impl_into_spectred_request!(GetCurrentBlockColor);
     impl_into_spectred_request!(GetUtxoReturnAddress);
+    impl_into_spectred_request!(GetPruningWindowRoots);
+    impl_into_spectred_request!(AddArchivalBlocks);
 
     impl_into_spectred_request!(NotifyBlockAdded);
     impl_into_spectred_request!(NotifyNewBlockTemplate);
@@ -202,6 +204,8 @@ pub mod spectred_response_convert {
     impl_into_spectred_response!(GetFeeEstimateExperimental);
     impl_into_spectred_response!(GetCurrentBlockColor);
     impl_into_spectred_response!(GetUtxoReturnAddress);
+    impl_into_spectred_response!(GetPruningWindowRoots);
+    impl_into_spectred_response!(AddArchivalBlocks);
 
     impl_into_spectred_notify_response!(NotifyBlockAdded);
     impl_into_spectred_notify_response!(NotifyNewBlockTemplate);

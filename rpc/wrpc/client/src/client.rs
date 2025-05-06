@@ -653,6 +653,8 @@ impl RpcApi for SpectreRpcClient {
             SubmitTransaction,
             SubmitTransactionReplacement,
             Unban,
+            GetPruningWindowRoots,
+            AddArchivalBlocks,
         ]
     );
 
