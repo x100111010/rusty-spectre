@@ -366,6 +366,7 @@ jobs:
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
+          RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: |
           cd wasm
           bash build-release
