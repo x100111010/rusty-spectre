@@ -52,6 +52,8 @@ message SpectredMessage {
     IbdChainBlockLocatorMessage ibdChainBlockLocator = 54;
     RequestAntipastMessage requestAntipast = 55;
     RequestNextPruningPointAndItsAnticoneBlocksMessage requestNextPruningPointAndItsAnticoneBlocks = 56;
+    BlockBodyMessage ibdBlockBody = 57;
+    RequestIBDBlocksBodiesMessage requestIBDBlocksBodies = 58;
   }
 }
 

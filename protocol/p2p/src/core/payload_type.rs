@@ -46,6 +46,8 @@ pub enum SpectredMessagePayloadType {
     IbdChainBlockLocator,
     RequestAntipast,
     RequestNextPruningPointAndItsAnticoneBlocks,
+    IbdBlockBody,
+    RequestIbdBlocksBodies,
 }
 
 impl From<&SpectredMessagePayload> for SpectredMessagePayloadType {
@@ -102,6 +104,8 @@ impl From<&SpectredMessagePayload> for SpectredMessagePayloadType {
             SpectredMessagePayload::RequestNextPruningPointAndItsAnticoneBlocks(_) => {
                 SpectredMessagePayloadType::RequestNextPruningPointAndItsAnticoneBlocks
             }
+            SpectredMessagePayload::IbdBlockBody(_) => SpectredMessagePayloadType::IbdBlockBody,
+            SpectredMessagePayload::RequestIbdBlocksBodies(_) => SpectredMessagePayloadType::RequestIbdBlocksBodies,
         }
     }
 }

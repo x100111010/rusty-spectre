@@ -1,4 +1,3 @@
-use crate::ibd::IbdFlow;
 use crate::v5::{
     address::{ReceiveAddressesFlow, SendAddressesFlow},
     blockrelay::{flow::HandleRelayInvsFlow, handle_requests::HandleRelayBlockRequests},
@@ -12,21 +11,22 @@ use crate::v5::{
     request_pruning_point_utxo_set::RequestPruningPointUtxoSetFlow,
     txrelay::flow::{RelayTransactionsFlow, RequestTransactionsFlow},
 };
-
+pub(crate) mod request_ibd_blocks_body;
 use crate::{flow_context::FlowContext, flow_trait::Flow};
-use spectre_p2p_lib::{Router, SharedIncomingRoute, SpectredMessagePayloadType};
+
+use crate::ibd::IbdFlow;
+use spectre_p2p_lib::{SpectredMessagePayloadType, Router, SharedIncomingRoute};
 use spectre_utils::channel;
+use request_ibd_blocks_body::HandleIbdBlockBodyRequests;
 use std::sync::Arc;
 
 use crate::v6::request_pruning_point_and_anticone::PruningPointAndItsAnticoneRequestsFlow;
-
-pub(crate) mod request_pruning_point_and_anticone;
 
 pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
     // IBD flow <-> invs flow communication uses a job channel in order to always
     // maintain at most a single pending job which can be updated
     let (ibd_sender, relay_receiver) = channel::job();
-    let body_only_ibd_permitted = false;
+    let body_only_ibd_permitted = true;
     let mut flows: Vec<Box<dyn Flow>> = vec![
         Box::new(IbdFlow::new(
             ctx.clone(),
@@ -40,6 +40,7 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
                 SpectredMessagePayloadType::DoneBlocksWithTrustedData,
                 SpectredMessagePayloadType::IbdChainBlockLocator,
                 SpectredMessagePayloadType::IbdBlock,
+                SpectredMessagePayloadType::IbdBlockBody,
                 SpectredMessagePayloadType::TrustedData,
                 SpectredMessagePayloadType::PruningPoints,
                 SpectredMessagePayloadType::PruningPointProof,
@@ -93,6 +94,11 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
             router.clone(),
             router.subscribe(vec![SpectredMessagePayloadType::RequestIbdBlocks]),
         )),
+        Box::new(HandleIbdBlockBodyRequests::new(
+            ctx.clone(),
+            router.clone(),
+            router.subscribe(vec![SpectredMessagePayloadType::RequestIbdBlocksBodies]),
+        )),
         Box::new(HandleAntipastRequests::new(
             ctx.clone(),
             router.clone(),
@@ -101,10 +107,8 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
         Box::new(RelayTransactionsFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe_with_capacity(
-                vec![SpectredMessagePayloadType::InvTransactions],
-                RelayTransactionsFlow::invs_channel_size(),
-            ),
+            router
+                .subscribe_with_capacity(vec![SpectredMessagePayloadType::InvTransactions], RelayTransactionsFlow::invs_channel_size()),
             router.subscribe_with_capacity(
                 vec![SpectredMessagePayloadType::Transaction, SpectredMessagePayloadType::TransactionNotFound],
                 RelayTransactionsFlow::txs_channel_size(),
@@ -115,11 +119,7 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
             router.clone(),
             router.subscribe(vec![SpectredMessagePayloadType::RequestTransactions]),
         )),
-        Box::new(ReceiveAddressesFlow::new(
-            ctx.clone(),
-            router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::Addresses]),
-        )),
+        Box::new(ReceiveAddressesFlow::new(ctx.clone(), router.clone(), router.subscribe(vec![SpectredMessagePayloadType::Addresses]))),
         Box::new(SendAddressesFlow::new(
             ctx.clone(),
             router.clone(),

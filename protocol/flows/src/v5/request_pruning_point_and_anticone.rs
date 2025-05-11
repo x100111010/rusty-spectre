@@ -13,7 +13,7 @@ use spectre_p2p_lib::{
     IncomingRoute, Router,
 };
 
-use crate::{flow_context::FlowContext, flow_trait::Flow, v5::ibd::IBD_BATCH_SIZE};
+use crate::{flow_context::FlowContext, flow_trait::Flow, ibd::IBD_BATCH_SIZE};
 
 pub struct PruningPointAndItsAnticoneRequestsFlow {
     ctx: FlowContext,
