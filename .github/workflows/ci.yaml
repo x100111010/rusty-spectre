@@ -221,22 +221,22 @@ jobs:
       # append here any new wasm32 crate not already covered by the existing checks
       - name: Run cargo check of spectre-wrpc-wasm for wasm32 target
         env:
-          TARGET_CC: clang
-          TARGET_CFLAGS: -I/usr/include
+          # TARGET_CC: clang
+          # TARGET_CFLAGS: -I/usr/include
           RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: cargo clippy -p spectre-wrpc-wasm --target wasm32-unknown-unknown
 
       - name: Run cargo check of spectre-wallet-cli-wasm for wasm32 target
         env:
-          TARGET_CC: clang
-          TARGET_CFLAGS: -I/usr/include
+          # TARGET_CC: clang
+          # TARGET_CFLAGS: -I/usr/include
           RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: cargo clippy -p spectre-wallet-cli-wasm --target wasm32-unknown-unknown
 
       - name: Run cargo check of spectre-wasm for wasm32 target
         env:
-          TARGET_CC: clang
-          TARGET_CFLAGS: -I/usr/include
+          # TARGET_CC: clang
+          # TARGET_CFLAGS: -I/usr/include
           RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: cargo clippy -p spectre-wasm --target wasm32-unknown-unknown
 
@@ -310,8 +310,8 @@ jobs:
 
       - name: Build WASM release
         env:
-          TARGET_CC: clang
-          TARGET_CFLAGS: -I/usr/include
+          # TARGET_CC: clang
+          # TARGET_CFLAGS: -I/usr/include
           RUSTFLAGS: '--cfg getrandom_backend="wasm_js"'
         run: |
           pushd .
