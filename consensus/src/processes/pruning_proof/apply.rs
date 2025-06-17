@@ -84,6 +84,13 @@ impl PruningProofManager {
 
         for (level, headers) in proof.iter().enumerate() {
             trace!("Applying level {} from the pruning point proof", level);
+
+            /*
+            if level == 0 {
+                self.ghostdag_store.insert(ORIGIN, self.ghostdag_manager.origin_ghostdag_data()).unwrap();
+            }
+            */
+
             let mut level_ancestors: HashSet<Hash> = HashSet::new();
             level_ancestors.insert(ORIGIN);
 
@@ -97,6 +104,10 @@ impl PruningProofManager {
                         .collect_vec()
                         .push_if_empty(ORIGIN),
                 );
+
+                if parents[0] == ORIGIN {
+                    info!("Block {} got fefe (ORIGIN), actual parents: {:?}", header.hash, header.direct_parents());
+                }
 
                 self.relations_stores.write()[level].insert(header.hash, parents.clone()).unwrap();
 
