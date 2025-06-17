@@ -245,6 +245,10 @@ impl PruningProofManager {
         let reachability_stores = &ctx.reachability_stores;
         let ghostdag_managers = &ctx.ghostdag_managers;
 
+        let mut pow_bits_samples = Vec::new();
+        let mut level_counts = vec![0; (self.max_block_level + 1) as usize];
+        let mut bits_by_level: Vec<Vec<u32>> = vec![Vec::new(); (self.max_block_level + 1) as usize];
+
         let proof_pp_header = proof[0].last().expect("checked if empty");
         let proof_pp = proof_pp_header.hash;
 
@@ -276,7 +280,22 @@ impl PruningProofManager {
                     processed = i + 1;
                     last_time = now;
                 }
+
                 let (header_level, pow_passes) = calc_block_level_check_pow(header, self.max_block_level, &self.sigma_activation);
+
+                if log_validating && !header.parents_by_level.is_empty() {
+                    let sigma_activated = self.sigma_activation.is_active(header.daa_score);
+                    let state = spectre_pow::State::new(header, sigma_activated);
+                    let (_, pow) = state.check_pow(header.nonce);
+                    let pow_bits = pow.bits();
+                    pow_bits_samples.push(pow_bits);
+                    bits_by_level[header_level as usize].push(pow_bits);
+                }
+
+                if log_validating {
+                    level_counts[header_level as usize] += 1;
+                }
+
                 if header_level < level {
                     return Err(PruningImportError::PruningProofWrongBlockLevel(header.hash, header_level, level));
                 }
@@ -355,6 +374,25 @@ impl PruningProofManager {
             }
 
             selected_tip_by_level[level_idx] = selected_tip;
+        }
+
+        if log_validating && !pow_bits_samples.is_empty() {
+            pow_bits_samples.sort_unstable();
+            info!("PoW bits from {} samples:", pow_bits_samples.len());
+            info!("Min bits: {}", pow_bits_samples.first().unwrap_or(&0));
+            info!("Max bits: {}", pow_bits_samples.last().unwrap_or(&0));
+            info!("c max_block_level: {}", self.max_block_level);
+            info!("Level distribution: {:?}", level_counts);
+
+            for (level, bits_vec) in bits_by_level.iter().enumerate() {
+                if !bits_vec.is_empty() {
+                    let mut sorted_bits = bits_vec.clone();
+                    sorted_bits.sort_unstable();
+                    let min_bits = *sorted_bits.first().unwrap();
+                    let max_bits = *sorted_bits.last().unwrap();
+                    info!("Level {}: {} blocks, bits {} - {}", level, sorted_bits.len(), min_bits, max_bits);
+                }
+            }
         }
 
         Ok(selected_tip_by_level.into_iter().map(|selected_tip| selected_tip.unwrap()).collect())
