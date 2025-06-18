@@ -112,6 +112,7 @@ impl PruningProofManager {
                 self.relations_stores.write()[level].insert(header.hash, parents.clone()).unwrap();
 
                 if level == 0 {
+                    // self.ghostdag_store.insert(ORIGIN, self.ghostdag_manager.origin_ghostdag_data()).unwrap();
                     let gd = if let Some(gd) = trusted_gd_map.get(&header.hash) {
                         gd.clone()
                     } else {
