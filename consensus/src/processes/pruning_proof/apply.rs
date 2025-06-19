@@ -5,6 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+// use crate::model::stores::headers::HeaderStoreReader;
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use spectre_consensus_core::{
@@ -84,13 +85,6 @@ impl PruningProofManager {
 
         for (level, headers) in proof.iter().enumerate() {
             trace!("Applying level {} from the pruning point proof", level);
-
-            /*
-            if level == 0 {
-                self.ghostdag_store.insert(ORIGIN, self.ghostdag_manager.origin_ghostdag_data()).unwrap();
-            }
-            */
-
             let mut level_ancestors: HashSet<Hash> = HashSet::new();
             level_ancestors.insert(ORIGIN);
 
@@ -107,12 +101,24 @@ impl PruningProofManager {
 
                 if parents[0] == ORIGIN {
                     info!("Block {} got fefe (ORIGIN), actual parents: {:?}", header.hash, header.direct_parents());
+                    info!("Is first block in level {}: {}", level, header.hash == headers[0].hash);
                 }
 
                 self.relations_stores.write()[level].insert(header.hash, parents.clone()).unwrap();
 
+                /*
+                info!("Level: {} | Hash: {} | Parents: {:?}", level, header.hash, parents);
+                for parent in parents.iter() {
+                    if *parent != ORIGIN {
+                        let parent_header = self.headers_store.get_header(*parent).unwrap();
+                        let parent_dag_level = calc_block_level(&parent_header, self.max_block_level, &self.sigma_activation);
+                        info!("Parent: {} => dag level {}", parent, parent_dag_level);
+                    }
+                }
+                */
+
                 if level == 0 {
-                    // self.ghostdag_store.insert(ORIGIN, self.ghostdag_manager.origin_ghostdag_data()).unwrap();
+                    let _ = self.ghostdag_store.insert(ORIGIN, self.ghostdag_manager.origin_ghostdag_data());
                     let gd = if let Some(gd) = trusted_gd_map.get(&header.hash) {
                         gd.clone()
                     } else {
