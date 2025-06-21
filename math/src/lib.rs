@@ -190,4 +190,35 @@ mod tests {
         ]);
         assert_eq!(r / newr, expected);
     }
+
+    #[test]
+    fn test_compact_bits_to_pow_bits() {
+        let test_cases = vec![
+            536999497, // Spectre genesis
+            0x207fffff, // Kaspa Genesis Before Hardfork
+            486722099, // Kaspa Genesis
+        ];
+
+        /*
+        From Kaspad:
+        This is technically 255, but we clamped it at 256 - block level of mainnet genesis
+        This means that any block that has a level lower or equal to genesis will be level 0.
+
+        MaxBlockLevel: 225,
+
+        Compact: 0x2001f649 -> Pow bits: 249
+        Compact: 0x207fffff -> Pow bits: 255
+        Compact: 0x1d02ca33 -> Pow bits: 226
+        */
+
+        for compact_bits in test_cases {
+            let target = Uint256::from_compact_target_bits(compact_bits);
+            let pow_bits = target.bits();
+            println!(
+                "Compact: 0x{:08x} -> Pow bits: {}",
+                compact_bits,
+                pow_bits
+            );
+        }
+    }
 }

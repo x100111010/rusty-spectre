@@ -44,14 +44,18 @@ impl State {
         // Hasher already contains PRE_POW_HASH || TIME || 32 zero byte padding; so only the NONCE is missing
         let hash = self.hasher.clone().finalize_with_nonce(nonce);
         let bwt_hash = astrobwtv3::astrobwtv3_hash(&hash.as_bytes());
-        let hash = self.matrix.heavy_hash(bwt_hash.into(), self.sigma_activated);
-        Uint256::from_le_bytes(hash.as_bytes())
+        if self.sigma_activated {
+            Uint256::from_le_bytes(bwt_hash)
+        } else {
+            Uint256::from_le_bytes(self.matrix.heavy_hash(bwt_hash.into()).as_bytes())
+        }
     }
 
     #[inline]
     #[must_use]
     pub fn check_pow(&self, nonce: u64) -> (bool, Uint256) {
         let pow = self.calculate_pow(nonce);
+        // println!("nonce: {}, pow.bits(): {}, zeros {}, passed: {}", nonce, pow.bits(), (256 - pow.bits()), pow <= self.target);
         // The pow hash must be less or equal than the claimed target.
         (pow <= self.target, pow)
     }

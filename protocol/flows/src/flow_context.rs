@@ -27,6 +27,8 @@ use spectre_core::{
     spectred_env::{name, version},
     task::tick::TickService,
 };
+use spectre_pow::calc_block_level_check_pow;
+
 use spectre_core::{time::unix_now, warn};
 use spectre_hashes::Hash;
 use spectre_mining::mempool::tx::{Orphan, Priority};
@@ -498,9 +500,21 @@ impl FlowContext {
     /// Adds the rpc-submitted block to the DAG and propagates it to peers.
     pub async fn submit_rpc_block(&self, consensus: &ConsensusProxy, block: Block) -> Result<(), ProtocolError> {
         info!("NEW BLOCK ADDED ****************************************");
+        let sigma_activated = self.config.sigma_activation.is_active(block.header.daa_score);
+        let state = spectre_pow::State::new(&block.header, sigma_activated);
+        let (_, pow) = state.check_pow(block.header.nonce);
+        let pow_bits = pow.bits();
+        let (block_level, _) = calc_block_level_check_pow(&block.header, self.config.max_block_level, &self.config.sigma_activation);
+
         info!(
-            "BlueWork [{}], BlueScore [{}], DAAScore [{}], Bits [{}], Version [{}]",
-            block.header.blue_work, block.header.blue_score, block.header.daa_score, block.header.bits, block.header.version,
+            "BlueWork [{}], BlueScore [{}], DAAScore [{}], Version [{}], Level [{}], PoWBits [{}]",
+            block.header.blue_work,
+            block.header.blue_score,
+            block.header.daa_score,
+            // block.header.bits, Bits [{}]
+            block.header.version,
+            block_level,
+            pow_bits
         );
 
         if block.transactions.is_empty() {
