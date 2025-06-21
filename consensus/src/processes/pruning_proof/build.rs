@@ -7,7 +7,7 @@ use spectre_consensus_core::{
     pruning::PruningPointProof,
     BlockHashMap, BlockHashSet, BlockLevel, HashMapCustomHasher, KType,
 };
-use spectre_core::debug;
+use spectre_core::info;
 use spectre_database::prelude::{CachePolicy, ConnBuilder, StoreError, StoreResult, StoreResultEmptyTuple, StoreResultExtensions, DB};
 use spectre_hashes::Hash;
 
@@ -285,6 +285,7 @@ impl PruningProofManager {
             };
 
             if level == 0 {
+                info!("Found sufficient root for level {level} after {tries} tries: {root}");
                 return Ok((self.ghostdag_store.clone(), selected_tip, root));
             }
 
@@ -304,6 +305,7 @@ impl PruningProofManager {
             if has_required_block
                 && (root == self.genesis_hash || ghostdag_store.get_blue_score(selected_tip).unwrap() >= required_level_depth)
             {
+                info!("Found sufficient root for level {level} after {tries} tries: {root}");
                 break Ok((ghostdag_store, selected_tip, root));
             }
 
@@ -314,7 +316,7 @@ impl PruningProofManager {
                     // However, when syncing with an older node version that doesn't have a safety margin for the proof, it's possible to
                     // try to find 2500 depth worth of headers at a level, but the proof only contains about 2000 headers. To be able to sync
                     // with such an older node. As long as we found the required block, we can still proceed.
-                    debug!("Failed to find sufficient root for level {level} after {tries} tries. Headers below the current depth of {required_base_level_depth} are already pruned. Required block found so trying anyway.");
+                    info!("Failed to find sufficient root for level {level} after {tries} tries. Headers below the current depth of {required_base_level_depth} are already pruned. Required block found so trying anyway.");
                     break Ok((ghostdag_store, selected_tip, root));
                 } else {
                     panic!("Failed to find sufficient root for level {level} after {tries} tries. Headers below the current depth of {required_base_level_depth} are already pruned");
@@ -323,7 +325,7 @@ impl PruningProofManager {
 
             // If we don't have enough depth now, we need to look deeper
             required_base_level_depth = (required_base_level_depth as f64 * 1.1) as u64;
-            debug!("Failed to find sufficient root for level {level} after {tries} tries. Retrying again to find with depth {required_base_level_depth}");
+            info!("Failed to find sufficient root for level {level} after {tries} tries. Retrying again to find with depth {required_base_level_depth}");
         }
     }
 
@@ -353,6 +355,7 @@ impl PruningProofManager {
             self.reachability_service.clone(),
             level,
             self.max_block_level,
+            self.sigma_activation.is_active(self.headers_store.get_daa_score(selected_tip).unwrap()),
         );
 
         // Note there is no need to initialize origin since we have a single root

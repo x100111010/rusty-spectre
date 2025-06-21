@@ -128,6 +128,7 @@ pub struct HeaderProcessor {
     pub(super) skip_proof_of_work: bool,
     pub(super) max_block_level: BlockLevel,
     pub(super) sigma_activation: ForkActivation,
+    pub(super) max_block_level_hf: ForkedParam<BlockLevel>,
 
     // DB
     db: Arc<DB>,
@@ -215,6 +216,7 @@ impl HeaderProcessor {
             skip_proof_of_work: params.skip_proof_of_work,
             max_block_level: params.max_block_level,
             sigma_activation: params.sigma_activation,
+            max_block_level_hf: params.max_block_level_hf(),
         }
     }
 

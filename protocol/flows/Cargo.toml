@@ -11,6 +11,7 @@ repository.workspace = true
 
 [dependencies]
 spectre-core.workspace = true
+spectre-pow.workspace = true
 spectre-consensus-core.workspace = true
 spectre-consensus-notify.workspace = true
 spectre-p2p-lib.workspace = true

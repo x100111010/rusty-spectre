@@ -52,6 +52,15 @@ impl State {
     #[must_use]
     pub fn check_pow(&self, nonce: u64) -> (bool, Uint256) {
         let pow = self.calculate_pow(nonce);
+        println!(
+            "nonce: {}, target: {}, pow: {}, pow.bits(): {}, passed: {}",
+            nonce,
+            self.target,
+            pow,
+            pow.bits(),
+            pow <= self.target
+        );
+
         // The pow hash must be less or equal than the claimed target.
         (pow <= self.target, pow)
     }
@@ -74,11 +83,18 @@ pub fn calc_block_level_check_pow(
     let sigma_activated = sigma_activation.is_active(header.daa_score);
     let state = State::new(header, sigma_activated);
     let (passed, pow) = state.check_pow(header.nonce);
-    let block_level = calc_level_from_pow(pow, max_block_level);
+    let block_level = calc_level_from_pow(pow, max_block_level, sigma_activated);
     (block_level, passed)
 }
 
-pub fn calc_level_from_pow(pow: Uint256, max_block_level: BlockLevel) -> BlockLevel {
-    let signed_block_level = max_block_level as i64 - pow.bits() as i64;
+pub fn calc_level_from_pow(pow: Uint256, max_block_level: BlockLevel, sigma_activated: bool) -> BlockLevel {
+    let max_block_level_new = if sigma_activated {
+        println!("[Sigma] Max block level: {} -> 250", max_block_level);
+        250
+    } else {
+        max_block_level
+    };
+
+    let signed_block_level = max_block_level_new as i64 - pow.bits() as i64;
     max(signed_block_level, 0) as BlockLevel
 }

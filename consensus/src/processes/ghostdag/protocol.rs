@@ -63,6 +63,7 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
         reachability_service: U,
         level: BlockLevel,
         max_block_level: BlockLevel,
+        sigma_activated: bool,
     ) -> Self {
         Self {
             genesis_hash,
@@ -71,7 +72,7 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
             relations_store,
             reachability_service,
             headers_store,
-            level_work: level_work(level, max_block_level),
+            level_work: level_work(level, max_block_level, sigma_activated),
         }
     }
 

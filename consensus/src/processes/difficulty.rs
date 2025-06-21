@@ -426,13 +426,15 @@ pub fn calc_work(bits: u32) -> BlueWorkType {
     res.try_into().expect("Work should not exceed 2**192")
 }
 
-pub fn level_work(level: u8, max_block_level: u8) -> BlueWorkType {
+pub fn level_work(level: u8, max_block_level: u8, sigma_activated: bool) -> BlueWorkType {
     // Need to make a special condition for level 0 to ensure true work is always used
     if level == 0 {
         return 0.into();
     }
+
+    let max_block_level_new = if sigma_activated { 250 } else { max_block_level };
     // We use 256 here so the result corresponds to the work at the level from calc_level_from_pow
-    let exp = (level as u32) + 256 - (max_block_level as u32);
+    let exp = (level as u32) + 256 - (max_block_level_new as u32);
     BlueWorkType::from_u64(1) << exp.min(MAX_WORK_LEVEL as u32)
 }
 
@@ -478,10 +480,10 @@ mod tests {
             // required pow for level
             let level_target = (Uint320::from_u64(1) << (max_block_level - level).max(MAX_WORK_LEVEL) as u32) - Uint320::from_u64(1);
             let level_target = Uint256::from_be_bytes(level_target.to_be_bytes()[8..40].try_into().unwrap());
-            let calculated_level = calc_level_from_pow(level_target, max_block_level);
+            let calculated_level = calc_level_from_pow(level_target, max_block_level, false);
 
             let true_level_work = calc_work(level_target.compact_target_bits());
-            let calc_level_work = level_work(level, max_block_level);
+            let calc_level_work = level_work(level, max_block_level, false);
 
             // A "good enough" estimate of level work is within 1% diff from work with actual level target
             // It's hard to calculate percentages with these large numbers, so to get around using floats
@@ -510,6 +512,6 @@ mod tests {
     #[test]
     fn test_base_level_work() {
         // Expect that at level 0, the level work is always 0
-        assert_eq!(BlueWorkType::from(0), level_work(0, 255));
+        assert_eq!(BlueWorkType::from(0), level_work(0, 255, false));
     }
 }

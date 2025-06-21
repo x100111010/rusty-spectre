@@ -314,6 +314,15 @@ impl Params {
         ForkedParam::new(1000 / self.prior_target_time_per_block, 1000 / self.sigma.target_time_per_block, self.sigma_activation)
     }
 
+    /// Returns the maximum block level
+    /// Pre-Sigma: 225 levels caused all blocks to become level 0 due to high pow.bits() values (230-231)
+    /// Post-Sigma: 250 levels fixes the level distribution and restores proper DAG hierarchy
+    #[inline]
+    #[must_use]
+    pub fn max_block_level_hf(&self) -> ForkedParam<BlockLevel> {
+        ForkedParam::new(self.max_block_level, 250, self.sigma_activation)
+    }
+
     pub fn ghostdag_k(&self) -> ForkedParam<KType> {
         ForkedParam::new(self.prior_ghostdag_k, self.sigma.ghostdag_k, self.sigma_activation)
     }
@@ -654,7 +663,7 @@ pub const DEVNET_PARAMS: Params = Params {
     pre_deflationary_phase_base_subsidy: 1500000000,
     prior_coinbase_maturity: 100,
     skip_proof_of_work: false,
-    max_block_level: 250,
+    max_block_level: 225,
     pruning_proof_m: 1000,
 
     sigma: SIGMA,

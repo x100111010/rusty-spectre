@@ -180,6 +180,7 @@ impl PruningProofManager {
         // [Sigma]: decide on ghostdag K based on proof pruning point DAA score
         let proof_pp_daa_score = proof[0].last().expect("checked if empty").daa_score;
         let ghostdag_k = self.ghostdag_k.get(proof_pp_daa_score);
+        let sigma_activated = self.sigma_activation.is_active(proof_pp_daa_score);
 
         let headers_estimate = self.estimate_proof_unique_size(proof);
 
@@ -214,6 +215,7 @@ impl PruningProofManager {
                     reachability_services[level].clone(),
                     level as BlockLevel,
                     self.max_block_level,
+                    sigma_activated,
                 )
             })
             .collect_vec();

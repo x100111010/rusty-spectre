@@ -113,7 +113,8 @@ impl HeaderProcessor {
 
         let (passed, pow) = state.check_pow(header.nonce);
         if passed || self.skip_proof_of_work {
-            Ok(calc_level_from_pow(pow, self.max_block_level))
+            let max_level = if sigma_activated { 250 } else { self.max_block_level };
+            Ok(calc_level_from_pow(pow, max_level, sigma_activated))
         } else {
             Err(RuleError::InvalidPoW)
         }
