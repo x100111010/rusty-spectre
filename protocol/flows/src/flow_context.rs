@@ -500,11 +500,10 @@ impl FlowContext {
     /// Adds the rpc-submitted block to the DAG and propagates it to peers.
     pub async fn submit_rpc_block(&self, consensus: &ConsensusProxy, block: Block) -> Result<(), ProtocolError> {
         info!("NEW BLOCK ADDED ****************************************");
-        let sigma_activated = self.config.sigma_activation.is_active(block.header.daa_score);
-        let state = spectre_pow::State::new(&block.header, sigma_activated);
+        let state = spectre_pow::State::new(&block.header);
         let (_, pow) = state.check_pow(block.header.nonce);
         let pow_bits = pow.bits();
-        let (block_level, _) = calc_block_level_check_pow(&block.header, self.config.max_block_level, &self.config.sigma_activation);
+        let (block_level, _) = calc_block_level_check_pow(&block.header, self.config.max_block_level);
 
         info!(
             "BlueWork [{}], BlueScore [{}], DAAScore [{}], Version [{}], Level [{}], PoWBits [{}]",

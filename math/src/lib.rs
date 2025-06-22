@@ -194,9 +194,9 @@ mod tests {
     #[test]
     fn test_compact_bits_to_pow_bits() {
         let test_cases = vec![
-            536999497, // Spectre genesis
+            536999497,  // Spectre genesis
             0x207fffff, // Kaspa Genesis Before Hardfork
-            486722099, // Kaspa Genesis
+            486722099,  // Kaspa Genesis
         ];
 
         /*
@@ -214,11 +214,7 @@ mod tests {
         for compact_bits in test_cases {
             let target = Uint256::from_compact_target_bits(compact_bits);
             let pow_bits = target.bits();
-            println!(
-                "Compact: 0x{:08x} -> Pow bits: {}",
-                compact_bits,
-                pow_bits
-            );
+            println!("Compact: 0x{:08x} -> Pow bits: {}", compact_bits, pow_bits);
         }
     }
 }
