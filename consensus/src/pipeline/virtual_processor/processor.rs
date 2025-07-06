@@ -1144,6 +1144,11 @@ impl VirtualStateProcessor {
             for chunk in &pruning_utxoset_read.utxo_set.iterator().map(|iter_result| iter_result.unwrap()).chunks(1000) {
                 virtual_write.utxo_set.write_from_iterator_without_cache(chunk).unwrap();
             }
+
+            // Export the pruning_point_utxo_set after importing
+            if let Err(e) = virtual_write.utxo_set.export_to_json("pruning_point_utxo_set.json") {
+                info!("Failed to export pruning_point_utxo_set to JSON: {}", e);
+            }
         }
 
         let virtual_read = self.virtual_stores.upgradable_read();

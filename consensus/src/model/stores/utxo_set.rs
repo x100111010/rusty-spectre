@@ -1,4 +1,5 @@
 use rocksdb::WriteBatch;
+use serde_json;
 use spectre_consensus_core::{
     tx::{TransactionIndexType, TransactionOutpoint, UtxoEntry},
     utxo::{
@@ -6,11 +7,14 @@ use spectre_consensus_core::{
         utxo_view::UtxoView,
     },
 };
+use spectre_core::info;
 use spectre_database::prelude::StoreResultExtensions;
 use spectre_database::prelude::DB;
 use spectre_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use spectre_database::prelude::{CachePolicy, StoreError};
 use spectre_hashes::Hash;
+use std::fs::File;
+use std::io::Write;
 use std::{error::Error, fmt::Display, sync::Arc};
 
 type UtxoCollectionIterator<'a> = Box<dyn Iterator<Item = Result<(TransactionOutpoint, UtxoEntry), Box<dyn Error>>> + 'a>;
@@ -136,6 +140,50 @@ impl DbUtxoSetStore {
     ) -> Result<(), StoreError> {
         let mut writer = DirectDbWriter::new(&self.db);
         self.access.write_many_without_cache(&mut writer, &mut utxos.into_iter().map(|(o, e)| (o.into(), e)))?;
+        Ok(())
+    }
+
+    pub fn export_to_json(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = File::create(file_path)?;
+        let mut count = 0;
+
+        writeln!(file, "{{")?;
+
+        for (i, result) in self.iterator().enumerate() {
+            let (outpoint, utxo_entry) = result?;
+
+            if i > 0 {
+                writeln!(file, ",")?;
+            }
+
+            let address =
+                spectre_txscript::extract_script_pub_key_address(&utxo_entry.script_public_key, spectre_addresses::Prefix::Mainnet)
+                    .ok()
+                    .map(|addr| addr.to_string());
+
+            let entry_with_address = serde_json::json!({
+                "address": address,
+                "amount": utxo_entry.amount,
+                "scriptPublicKey": utxo_entry.script_public_key,
+                "blockDaaScore": utxo_entry.block_daa_score,
+                "isCoinbase": utxo_entry.is_coinbase
+            });
+
+            write!(file, r#"  "{}:{}": "#, outpoint.transaction_id, outpoint.index)?;
+            let json_str = serde_json::to_string(&entry_with_address)?;
+            write!(file, "{}", json_str)?;
+
+            count += 1;
+
+            if count % 100_000 == 0 {
+                info!("Exported {} UTXOs...", count);
+            }
+        }
+
+        writeln!(file)?;
+        writeln!(file, "}}")?;
+
+        info!("Exported {} UTXOs to {}", count, file_path);
         Ok(())
     }
 }
