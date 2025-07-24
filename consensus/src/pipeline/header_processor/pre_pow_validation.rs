@@ -14,6 +14,7 @@ impl HeaderProcessor {
         Ok(())
     }
 
+    // todo: move to pre_gd post sigma
     fn check_header_version(&self, ctx: &HeaderProcessingContext, header: &Header) -> BlockProcessResult<()> {
         let expected_version = if self.sigma_activation.is_active(ctx.selected_parent_daa_score()) {
             constants::BLOCK_VERSION_SPECTREXV2
