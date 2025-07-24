@@ -7,6 +7,7 @@ use crate::{
     IDENT,
 };
 use parking_lot::RwLock;
+use serde_json;
 use spectre_consensus_core::{tx::ScriptPublicKeys, utxo::utxo_diff::UtxoDiff, BlockHashSet};
 use spectre_consensusmanager::{ConsensusManager, ConsensusResetHandler};
 use spectre_core::{info, trace};
@@ -14,6 +15,8 @@ use spectre_database::prelude::{StoreError, StoreResult, DB};
 use spectre_hashes::Hash;
 use spectre_index_core::indexed_utxos::BalanceByScriptPublicKey;
 use spectre_utils::arc::ArcExtensions;
+use std::fs::File;
+use std::io::Write;
 use std::{
     fmt::Debug,
     sync::{Arc, Weak},
@@ -46,6 +49,71 @@ impl UtxoIndex {
         let utxoindex = Arc::new(RwLock::new(utxoindex));
         consensus_manager.register_consensus_reset_handler(Arc::new(UtxoIndexConsensusResetHandler::new(Arc::downgrade(&utxoindex))));
         Ok(utxoindex)
+    }
+
+    fn export_virtual_utxos(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let consensus = self.consensus_manager.consensus();
+        let session = futures::executor::block_on(consensus.session_blocking());
+
+        let mut file = File::create("virtual_utxos.json")?;
+        let mut count = 0;
+
+        writeln!(file, "{{")?;
+
+        let mut from_outpoint = None;
+        let mut first_entry = true;
+
+        loop {
+            let virtual_utxo_batch = session.get_virtual_utxos(from_outpoint, RESYNC_CHUNK_SIZE, count > 0);
+
+            if virtual_utxo_batch.is_empty() {
+                break;
+            }
+
+            for (outpoint, utxo_entry) in &virtual_utxo_batch {
+                if !first_entry {
+                    writeln!(file, ",")?;
+                }
+                first_entry = false;
+
+                let address = spectre_txscript::extract_script_pub_key_address(
+                    &utxo_entry.script_public_key,
+                    spectre_addresses::Prefix::Mainnet,
+                )
+                .ok()
+                .map(|addr| addr.to_string());
+
+                let entry_with_address = serde_json::json!({
+                    "address": address,
+                    "amount": utxo_entry.amount,
+                    "scriptPublicKey": utxo_entry.script_public_key,
+                    "blockDaaScore": utxo_entry.block_daa_score,
+                    "isCoinbase": utxo_entry.is_coinbase
+                });
+
+                write!(file, r#"  "{}:{}": "#, outpoint.transaction_id, outpoint.index)?;
+                let json_str = serde_json::to_string(&entry_with_address)?;
+                write!(file, "{}", json_str)?;
+
+                count += 1;
+
+                if count % 500_000 == 0 {
+                    info!("Exported {} UTXOs...", count);
+                }
+            }
+
+            // Set up for next batch
+            if virtual_utxo_batch.len() < RESYNC_CHUNK_SIZE {
+                break;
+            }
+            from_outpoint = Some(virtual_utxo_batch.last().expect("not empty").0);
+        }
+
+        writeln!(file)?;
+        writeln!(file, "}}")?;
+
+        info!("Exported {} virtual UTXOs to virtual_utxos.json", count);
+        Ok(())
     }
 }
 
@@ -150,6 +218,7 @@ impl UtxoIndexApi for UtxoIndex {
 
         let consensus_tips = session.get_virtual_parents();
         let mut circulating_supply: CirculatingSupply = 0;
+        let mut processed = 0u64;
 
         //Initial batch is without specified seek and none-skipping.
         let mut virtual_utxo_batch = session.get_virtual_utxos(None, RESYNC_CHUNK_SIZE, false);
@@ -166,6 +235,7 @@ impl UtxoIndexApi for UtxoIndex {
             utxoindex_changes.add_utxos_from_vector(virtual_utxo_batch);
 
             circulating_supply += utxoindex_changes.supply_change as CirculatingSupply;
+            processed += current_chunk_size as u64;
 
             self.store.update_utxo_state(&utxoindex_changes.utxo_changes.added, &utxoindex_changes.utxo_changes.removed, true)?;
 
@@ -176,6 +246,11 @@ impl UtxoIndexApi for UtxoIndex {
             virtual_utxo_batch = session.get_virtual_utxos(next_outpoint_from, RESYNC_CHUNK_SIZE, true);
             current_chunk_size = virtual_utxo_batch.len();
             trace!("[{0}] resyncing with batch of {1} utxos from consensus db", IDENT, current_chunk_size);
+
+            // Log progress with circulating supply
+            if processed % 100_000 == 0 || current_chunk_size < RESYNC_CHUNK_SIZE {
+                info!("[{0}] Resyncing - UTXOs: {1}; Circulating Sompi Supply: {2}", IDENT, processed, circulating_supply);
+            }
         }
 
         // Commit to the remaining stores.
@@ -186,6 +261,11 @@ impl UtxoIndexApi for UtxoIndex {
 
         trace!("[{0}] committing consensus tips {consensus_tips:?} from consensus db", IDENT);
         self.store.set_tips(consensus_tips, true)?;
+
+        // Export virtual UTXOs after successful resync
+        if let Err(e) = self.export_virtual_utxos() {
+            info!("Failed to export virtual UTXO set to JSON: {}", e);
+        }
 
         Ok(())
     }

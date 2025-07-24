@@ -23,6 +23,9 @@ parking_lot.workspace = true
 rocksdb.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+serde_json.workspace = true
+spectre-addresses.workspace = true
+spectre-txscript.workspace = true
 
 [dev-dependencies]
 spectre-consensus.workspace = true

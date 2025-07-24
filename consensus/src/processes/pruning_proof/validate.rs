@@ -249,6 +249,7 @@ impl PruningProofManager {
         let proof_pp = proof_pp_header.hash;
 
         let mut selected_tip_by_level = vec![None; self.max_block_level as usize + 1];
+        let total_start = std::time::Instant::now();
         for level in (0..=self.max_block_level).rev() {
             // Before processing this level, check if the process is exiting so we can end early
             if self.is_consensus_exiting.load(Ordering::Relaxed) {
@@ -355,6 +356,10 @@ impl PruningProofManager {
             }
 
             selected_tip_by_level[level_idx] = selected_tip;
+        }
+
+        if log_validating {
+            info!("All levels validation completed in {:?}", total_start.elapsed());
         }
 
         Ok(selected_tip_by_level.into_iter().map(|selected_tip| selected_tip.unwrap()).collect())
