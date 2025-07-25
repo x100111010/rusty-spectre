@@ -2,6 +2,7 @@ use crate::cli::SpectreCli;
 use crate::imports::*;
 use crate::result::Result;
 use spectre_bip32::{Language, Mnemonic, WordCount};
+use spectre_wallet_core::storage::keydata::PrvKeyDataVariantKind;
 use spectre_wallet_core::{
     storage::{make_filename, Hint},
     wallet::WalletGuard,
@@ -119,16 +120,17 @@ pub(crate) async fn create(
 
     let prv_key_data_args = if import_with_mnemonic {
         let words = crate::wizards::import::prompt_for_mnemonic(&term).await?;
-        PrvKeyDataCreateArgs::new(None, payment_secret.clone(), Secret::from(words.join(" ")))
+        PrvKeyDataCreateArgs::new(None, payment_secret.clone(), Secret::from(words.join(" ")), PrvKeyDataVariantKind::Mnemonic)
     } else {
         PrvKeyDataCreateArgs::new(
             None,
             payment_secret.clone(),
             Secret::from(Mnemonic::random(word_count, Language::default())?.phrase()),
+            PrvKeyDataVariantKind::Mnemonic,
         )
     };
 
-    let mnemonic_phrase = prv_key_data_args.mnemonic.clone();
+    let mnemonic_phrase = prv_key_data_args.secret.clone();
     let notifier = ctx.notifier().show(Notification::Processing).await;
 
     // suspend commits for multiple operations

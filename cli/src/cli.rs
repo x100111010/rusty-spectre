@@ -285,12 +285,14 @@ impl SpectreCli {
 
                         if let Ok(msg) = msg {
                             match *msg {
+                                Events::WalletList { .. } => {},
                                 Events::WalletPing => {
                                     // log_info!("Spectre NG - received wallet ping");
                                 },
                                 Events::Metrics { network_id : _, metrics : _ } => {
                                     // log_info!("Spectre NG - received metrics event {metrics:?}")
                                 }
+                                Events::FeeRate { .. } => {},
                                 Events::Error { message } => { terrorln!(this,"{message}"); },
                                 Events::UtxoProcStart => {},
                                 Events::UtxoProcStop => {},

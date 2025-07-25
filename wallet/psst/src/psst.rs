@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use spectre_bip32::{secp256k1, DerivationPath, KeyFingerprint};
-use spectre_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
+use spectre_consensus_core::{hashing::sighash::SigHashReusedValuesUnsync, Hash};
 use std::{collections::BTreeMap, fmt::Display, fmt::Formatter, future::Future, marker::PhantomData, ops::Deref};
 
 pub use crate::error::Error;
@@ -13,7 +13,8 @@ pub use crate::global::{Global, GlobalBuilder};
 pub use crate::input::{Input, InputBuilder};
 pub use crate::output::{Output, OutputBuilder};
 pub use crate::role::{Combiner, Constructor, Creator, Extractor, Finalizer, Signer, Updater};
-use spectre_consensus_core::tx::UtxoEntry;
+use spectre_consensus_core::config::params::Params;
+use spectre_consensus_core::mass::{MassCalculator, NonContextualMasses};
 use spectre_consensus_core::{
     hashing::sighash_type::SigHashType,
     subnets::SUBNETWORK_ID_NATIVE,
@@ -313,6 +314,20 @@ impl PSST<Signer> {
     pub fn combiner(self) -> PSST<Combiner> {
         PSST { inner_psst: self.inner_psst, role: Default::default() }
     }
+
+    // Unorphan batch transaction UTXO.
+    pub fn set_input_prev_transaction_id(self, transaction_id: Hash) -> PSST<Signer> {
+        let mut new_inputs = self.inner_psst.inputs.clone();
+
+        new_inputs.iter_mut().for_each(|input| {
+            input.previous_outpoint.transaction_id = transaction_id;
+        });
+
+        let mut updated_inner = self.inner_psst.clone();
+        updated_inner.inputs = new_inputs;
+
+        PSST { inner_psst: updated_inner, role: Default::default() }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -411,7 +426,7 @@ impl PSST<Finalizer> {
 }
 
 impl PSST<Extractor> {
-    pub fn extract_tx_unchecked(self) -> Result<impl FnOnce(u64) -> (Transaction, Vec<Option<UtxoEntry>>), TxNotFinalized> {
+    pub fn extract_tx_unchecked(self, params: &Params) -> Result<MutableTransaction<Transaction>, TxNotFinalized> {
         let tx = self.unsigned_tx();
         let entries = tx.entries;
         let mut tx = tx.tx;
@@ -419,16 +434,17 @@ impl PSST<Extractor> {
             dest.signature_script = src.final_script_sig.ok_or(TxNotFinalized {})?;
             Ok(())
         })?;
-        Ok(move |mass| {
-            tx.set_mass(mass);
-            (tx, entries)
-        })
+        let tx = MutableTransaction { tx, entries, calculated_fee: None, calculated_non_contextual_masses: None };
+        let calculator = MassCalculator::new_with_consensus_params(params);
+        let storage_mass = calculator.calc_contextual_masses(&tx.as_verifiable()).map(|mass| mass.storage_mass).unwrap_or_default();
+        let NonContextualMasses { compute_mass, transient_mass } = calculator.calc_non_contextual_masses(&tx.tx);
+        let mass = storage_mass.max(compute_mass).max(transient_mass);
+        tx.tx.set_mass(mass);
+        Ok(tx)
     }
 
-    pub fn extract_tx(self) -> Result<impl FnOnce(u64) -> (Transaction, Vec<Option<UtxoEntry>>), ExtractError> {
-        let (tx, entries) = self.extract_tx_unchecked()?(0);
-
-        let tx = MutableTransaction::with_entries(tx, entries.into_iter().flatten().collect());
+    pub fn extract_tx(self, params: &Params) -> Result<MutableTransaction<Transaction>, ExtractError> {
+        let tx = self.extract_tx_unchecked(params)?;
         use spectre_consensus_core::tx::VerifiableTransaction;
         {
             let tx = tx.as_verifiable();
@@ -440,13 +456,7 @@ impl PSST<Extractor> {
                 <Result<(), ExtractError>>::Ok(())
             })?;
         }
-        let entries = tx.entries;
-        let tx = tx.tx;
-        let closure = move |mass| {
-            tx.set_mass(mass);
-            (tx, entries)
-        };
-        Ok(closure)
+        Ok(tx)
     }
 }
 

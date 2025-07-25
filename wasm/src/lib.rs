@@ -174,8 +174,9 @@ cfg_if::cfg_if! {
         }
 
         pub use spectre_consensus_wasm::*;
-        pub use spectre_wallet_keys::prelude::*;
         pub use spectre_wallet_core::wasm::*;
+        pub use spectre_wallet_keys::prelude::*;
+        pub use spectre_bip32::wasm::*;
 
     } else if #[cfg(feature = "wasm32-core")] {
 
@@ -206,6 +207,7 @@ cfg_if::cfg_if! {
         pub use spectre_consensus_wasm::*;
         pub use spectre_wallet_keys::prelude::*;
         pub use spectre_wallet_core::wasm::*;
+        pub use spectre_bip32::wasm::*;
 
     } else if #[cfg(feature = "wasm32-rpc")] {
 
@@ -222,6 +224,7 @@ cfg_if::cfg_if! {
         pub use spectre_addresses::{Address, Version as AddressVersion};
         pub use spectre_wallet_keys::prelude::*;
         pub use spectre_wasm_core::types::*;
+        pub use spectre_bip32::wasm::*;
 
     }
 }

@@ -1,11 +1,13 @@
-use crate::psst::PSST as Native;
+use crate::psst::{Input, PSST as Native};
 use crate::role::*;
+use spectre_consensus_core::network::NetworkType;
 use spectre_consensus_core::tx::TransactionId;
 use wasm_bindgen::prelude::*;
 // use js_sys::Object;
 use crate::psst::Inner;
 use serde::{Deserialize, Serialize};
 use spectre_consensus_client::{Transaction, TransactionInput, TransactionInputT, TransactionOutput, TransactionOutputT};
+use std::str::FromStr;
 use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 use workflow_wasm::{
@@ -95,7 +97,9 @@ impl TryCastFromJs for PSST {
         R: AsRef<JsValue> + 'a,
     {
         Self::resolve(value, || {
-            if let Some(data) = value.as_ref().as_string() {
+            if JsValue::is_undefined(value.as_ref()) {
+                Ok(PSST::from(State::Creator(Native::<Creator>::default())))
+            } else if let Some(data) = value.as_ref().as_string() {
                 let psst_inner: Inner = serde_json::from_str(&data).map_err(|_| Error::InvalidPayload)?;
                 Ok(PSST::from(State::NoOp(Some(psst_inner))))
             } else if let Ok(transaction) = Transaction::try_owned_from(value) {
@@ -123,7 +127,12 @@ impl PSST {
     #[wasm_bindgen(getter, js_name = "payload")]
     pub fn payload_getter(&self) -> JsValue {
         let state = self.state();
-        serde_wasm_bindgen::to_value(state.as_ref().unwrap()).unwrap()
+        workflow_wasm::serde::to_value(state.as_ref().unwrap()).unwrap()
+    }
+
+    pub fn serialize(&self) -> String {
+        let state = self.state();
+        serde_json::to_string(state.as_ref().unwrap()).unwrap()
     }
 
     fn state(&self) -> MutexGuard<Option<State>> {
@@ -233,7 +242,7 @@ impl PSST {
     pub fn fallback_lock_time(&self, lock_time: u64) -> Result<PSST> {
         let state = match self.take() {
             State::Creator(psst) => State::Creator(psst.fallback_lock_time(lock_time)),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Creator"))?,
         };
 
         self.replace(state)
@@ -243,7 +252,7 @@ impl PSST {
     pub fn inputs_modifiable(&self) -> Result<PSST> {
         let state = match self.take() {
             State::Creator(psst) => State::Creator(psst.inputs_modifiable()),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Creator"))?,
         };
 
         self.replace(state)
@@ -253,7 +262,7 @@ impl PSST {
     pub fn outputs_modifiable(&self) -> Result<PSST> {
         let state = match self.take() {
             State::Creator(psst) => State::Creator(psst.outputs_modifiable()),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Creator"))?,
         };
 
         self.replace(state)
@@ -263,7 +272,7 @@ impl PSST {
     pub fn no_more_inputs(&self) -> Result<PSST> {
         let state = match self.take() {
             State::Constructor(psst) => State::Constructor(psst.no_more_inputs()),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Constructor"))?,
         };
 
         self.replace(state)
@@ -273,7 +282,27 @@ impl PSST {
     pub fn no_more_outputs(&self) -> Result<PSST> {
         let state = match self.take() {
             State::Constructor(psst) => State::Constructor(psst.no_more_outputs()),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Constructor"))?,
+        };
+
+        self.replace(state)
+    }
+
+    #[wasm_bindgen(js_name = inputAndRedeemScript)]
+    pub fn input_with_redeem(&self, input: &TransactionInputT, data: &JsValue) -> Result<PSST> {
+        let obj = js_sys::Object::from(data.clone());
+
+        let input = TransactionInput::try_owned_from(input)?;
+        let mut input: Input = input.try_into()?;
+        let redeem_script = js_sys::Reflect::get(&obj, &"redeemScript".into())
+            .expect("Missing redeemscript field")
+            .as_string()
+            .expect("redeemscript must be a string");
+        input.redeem_script =
+            Some(hex::decode(redeem_script).map_err(|e| Error::custom(format!("Redeem script is not a hex string: {}", e)))?);
+        let state = match self.take() {
+            State::Constructor(psst) => State::Constructor(psst.input(input)),
+            _ => Err(Error::expected_state("Constructor"))?,
         };
 
         self.replace(state)
@@ -283,7 +312,7 @@ impl PSST {
         let input = TransactionInput::try_owned_from(input)?;
         let state = match self.take() {
             State::Constructor(psst) => State::Constructor(psst.input(input.try_into()?)),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Constructor"))?,
         };
 
         self.replace(state)
@@ -293,7 +322,7 @@ impl PSST {
         let output = TransactionOutput::try_owned_from(output)?;
         let state = match self.take() {
             State::Constructor(psst) => State::Constructor(psst.output(output.try_into()?)),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Constructor"))?,
         };
 
         self.replace(state)
@@ -303,7 +332,7 @@ impl PSST {
     pub fn set_sequence(&self, n: u64, input_index: usize) -> Result<PSST> {
         let state = match self.take() {
             State::Updater(psst) => State::Updater(psst.set_sequence(n, input_index)?),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Updater"))?,
         };
 
         self.replace(state)
@@ -314,7 +343,45 @@ impl PSST {
         let state = self.state();
         match state.as_ref().unwrap() {
             State::Signer(psst) => Ok(psst.calculate_id()),
-            state => Err(Error::state(state))?,
+            _ => Err(Error::expected_state("Signer"))?,
         }
+    }
+
+    #[wasm_bindgen(js_name = calculateMass)]
+    pub fn calculate_mass(&self, data: &JsValue) -> Result<u64> {
+        let obj = js_sys::Object::from(data.clone());
+        let network_id = js_sys::Reflect::get(&obj, &"networkId".into())
+            .map_err(|_| Error::custom("networkId is missing"))?
+            .as_string()
+            .ok_or_else(|| Error::custom("networkId must be a string"))?;
+
+        let network_id = NetworkType::from_str(&network_id).map_err(|e| Error::custom(format!("Invalid networkId: {}", e)))?;
+
+        let cloned_psst = self.clone();
+
+        let extractor = {
+            let finalizer = cloned_psst.finalizer()?;
+
+            let finalizer_state = finalizer.state().clone().unwrap();
+
+            match finalizer_state {
+                State::Finalizer(psst) => {
+                    for input in psst.inputs.iter() {
+                        if input.redeem_script.is_some() {
+                            return Err(Error::custom("Mass calculation is not supported for inputs with redeem scripts"));
+                        }
+                    }
+                    let psst = psst
+                        .finalize_sync(|inner: &Inner| -> Result<Vec<Vec<u8>>> { Ok(vec![vec![0u8, 65]; inner.inputs.len()]) })
+                        .map_err(|e| Error::custom(format!("Failed to finalize PSST: {e}")))?;
+                    psst.extractor()?
+                }
+                _ => panic!("Finalizer state is not valid"),
+            }
+        };
+        let tx = extractor
+            .extract_tx_unchecked(&network_id.into())
+            .map_err(|e| Error::custom(format!("Failed to extract transaction: {e}")))?;
+        Ok(tx.tx.mass())
     }
 }

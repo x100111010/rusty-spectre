@@ -22,6 +22,8 @@ impl Transfer {
         }
 
         let amount_sompi = try_parse_required_nonzero_spectre_as_sompi_u64(argv.get(1))?;
+        // TODO fee_rate
+        let fee_rate = None;
         let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(2))?.unwrap_or(0);
         let target_address = target_account.receive_address()?;
         let (wallet_secret, payment_secret) = ctx.ask_wallet_secret(Some(&account)).await?;
@@ -33,6 +35,7 @@ impl Transfer {
         let (summary, _ids) = account
             .send(
                 outputs.into(),
+                fee_rate,
                 priority_fee_sompi.into(),
                 None,
                 wallet_secret,

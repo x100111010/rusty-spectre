@@ -4,7 +4,7 @@ globalThis.WebSocket = require('websocket').w3cwebsocket; // W3C WebSocket modul
 
 const path = require('path');
 const fs = require('fs');
-const spectre = require('../../../../nodejs/spectre');
+const spectre = require('../../../../nodejs/spectre-dev');
 const {
     Wallet, setDefaultStorageFolder,
     AccountKind, Mnemonic, Resolver,
@@ -22,7 +22,7 @@ setDefaultStorageFolder(storageFolder);
 
 (async()=>{
     //const filename = "wallet-394";
-    const filename = "wallet-395";
+    const filename = "wallet-396-9";
     // const FILE_TX = path.join(storageFolder, filename+"-transactions.json");
 
     // let txs = {};
@@ -63,7 +63,7 @@ setDefaultStorageFolder(storageFolder);
         }
         let transactionsResult = await wallet.transactionsDataGet({
             accountId,
-            networkId: "testnet-8",
+            networkId: "testnet-11",
             start:0,
             end:20
         })
@@ -93,7 +93,7 @@ setDefaultStorageFolder(storageFolder);
     try {
         
         const walletSecret = "abc";
-        wallet = new Wallet({resident: false, networkId: "testnet-8", resolver: new Resolver()});
+        wallet = new Wallet({resident: false, networkId: "testnet-11", resolver: new Resolver()});
         //console.log("wallet", wallet)
         // Ensure wallet file
         if (!await wallet.exists(filename)){
@@ -173,11 +173,29 @@ setDefaultStorageFolder(storageFolder);
             accountDescriptors: false
         });
 
-        // Ensure default account
-        await wallet.accountsEnsureDefault({
+        let prvKeyData = await wallet.prvKeyDataCreate({
             walletSecret,
-            type: new AccountKind("bip32") // "bip32"
+            kind: "secretKey",
+            secretKey: "34f8cca12da8f6367ce4e1af3a998af3c67a50d91bafb68079f48785f1eef87f"
         });
+
+        //console.log("prvKeyData", prvKeyData)
+
+        let account = await wallet.accountsCreate({
+            walletSecret,
+            type:"spectre-keypair-standard",
+            accountName:"Account-B",
+            prvKeyDataId: prvKeyData.prvKeyDataId,
+        });
+
+        // console.log("account", account)
+        // return;
+
+        // // Ensure default account
+        // await wallet.accountsEnsureDefault({
+        //     walletSecret,
+        //     type: new AccountKind("bip32") // "bip32"
+        // });
 
         // // Create a new account
         // // create private key

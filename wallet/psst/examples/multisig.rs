@@ -1,4 +1,5 @@
 use secp256k1::{rand::thread_rng, Keypair};
+use spectre_consensus_core::config::params::TESTNET_PARAMS;
 use spectre_consensus_core::{
     hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
     tx::{TransactionId, TransactionOutpoint, UtxoEntry},
@@ -115,7 +116,8 @@ fn main() {
     println!("Finalized: {}", ser_finalized);
 
     let extractor_psst: PSST<Extractor> = serde_json::from_str(&ser_finalized).expect("Failed to deserialize");
-    let tx = extractor_psst.extract_tx().unwrap()(10).0;
+    let params = TESTNET_PARAMS;
+    let tx = extractor_psst.extract_tx(&params).unwrap().tx;
     let ser_tx = serde_json::to_string_pretty(&tx).unwrap();
     println!("Tx: {}", ser_tx);
 }

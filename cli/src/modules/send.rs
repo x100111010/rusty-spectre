@@ -57,6 +57,7 @@ impl Send {
         let (summary, _ids) = account
             .send(
                 outputs.into(),
+                fee_rate,
                 priority_fee_sompi.into(),
                 None,
                 wallet_secret,
