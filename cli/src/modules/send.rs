@@ -22,6 +22,9 @@ impl Send {
         // get priority fee first.
         let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(2))?.unwrap_or(0);
 
+        // TODO fee_rate
+        let fee_rate = None;
+
         // handle --send-all
         let amount_sompi = if argv.get(1).unwrap() == "--send-all" {
             // get mature balance from account
@@ -32,6 +35,7 @@ impl Send {
                 .clone()
                 .estimate(
                     PaymentDestination::PaymentOutputs(PaymentOutputs::from((address.clone(), balance.mature))),
+                    fee_rate,
                     Fees::ReceiverPays(0),
                     None,
                     &abortable,
@@ -41,7 +45,7 @@ impl Send {
             // subtract estimated and priority fee
             balance
                 .mature
-                .checked_sub(fee_sompi.aggregated_fees)
+                .checked_sub(fee_sompi.aggregate_fees)
                 .ok_or_else(|| Error::Custom("Insufficient funds to cover the transaction fee.".into()))?
                 .checked_sub(priority_fee_sompi.try_into().unwrap_or(0))
                 .ok_or_else(|| Error::Custom("Insufficient funds to cover the priority fee.".into()))?
